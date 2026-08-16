@@ -92,6 +92,16 @@ Walk the agreed tree and assign work to branches:
    pair stays under ~200 lines; otherwise it gets its own branch.
 5. **Single purpose test**: every branch must be describable in one sentence
    with no "and". If the sentence needs an "and", split again.
+6. **A function belongs to its caller's rung**, not to its file region's:
+   a helper cut away from its only caller leaves an unused symbol behind and
+   breaks the rung's typecheck (`noUnusedLocals`). Move `settle()`-like
+   helpers with the rung that first calls them, even when the plan filed
+   them under "state".
+7. **Estimate the skeleton at ~1/3 of the total diff.** Contracts, wiring
+   and realistic mocks are thicker than they look (field data: a 947-line PR
+   produced a 376-line B0; total placeholder overhead across the ladder ran
+   ~7%). Realistic mocks are part of B0's job — an `open()` that seats
+   believable state keeps every outer rung runnable and demoable.
 
 ## 3. Write the Branch Plan and stop
 
@@ -112,7 +122,28 @@ the ladder with per-branch estimates and **wait for the user's OK**. They may
 merge rungs, re-order, or push a boundary — update the plan, not the
 conversation memory.
 
-## 4. Handoff
+## 4. PR descriptions
+
+Each rung's PR is written in the repo's own description style — read the
+repo's recent substantial PRs and follow their pattern, not a generic
+template. On top of that pattern, a stacked PR states:
+
+- **Stack position and single purpose in the first paragraph** ("Rung B4 of
+  the stack rooted at #NNN. One purpose: …").
+- **The review-focus question** — the one thing this rung asks the reviewer
+  to judge. Small PRs earn this sentence; a 947-line PR never could.
+- **What stays placeholder and which rung fills it** — honest
+  `TODO(pacer:B<k>)` accounting, so a reviewer never mistakes scaffolding
+  for a bug.
+- **The maps live once, at the bottom**: the stack table and the
+  AC-to-rung table go in B0's PR ("listed so the split is explicit rather
+  than implied"); later rungs carry only their own AC lines and link back.
+- **Verification claims match what ran**: per-rung typecheck/lint, full
+  tests at the top; a retro split states the equivalence proof (top-of-stack
+  diff vs. the reference branch is empty), which is what transfers the
+  original PR's end-to-end verification to the stack.
+
+## 5. Handoff
 
 - **Mode A**: on approval the skill is done. Point the user at
   `/pacer <KEY>` — pacer detects `## Branch Plan` and implements the ladder

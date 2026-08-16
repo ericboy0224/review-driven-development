@@ -122,7 +122,10 @@ For each layer, in order:
 4. In stack mode: `gh stack submit` opens the whole ladder as draft PRs —
    let the user decide when each rung goes ready-for-review. Each PR
    description states the rung's single purpose and which placeholders it
-   fills. The stacked-prs skill covers rebase/link/merge from here.
+   fills (split-pr's "PR descriptions" section is the format). The
+   stacked-prs skill covers rebase/link/merge from here. Before the rungs go
+   ready-for-review, offer `/pr-deck <KEY>` — the guided-reading deck that
+   orients reviewers across the whole ladder.
 5. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
    handles PR creation and the Jira comment (skip PR creation in stack mode —
    the stack already opened them).

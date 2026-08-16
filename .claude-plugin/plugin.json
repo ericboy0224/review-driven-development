@@ -1,7 +1,7 @@
 {
   "name": "review-driven-development",
-  "version": "0.1.0",
-  "description": "Review-driven development: split work into single-purpose stacked branches before writing code (split-pr), pair-run the implementation layer by layer (pacer), and manage the resulting PR stack (stacked-prs). Every branch exists to be reviewed in minutes, not hours.",
+  "version": "0.2.0",
+  "description": "Review-driven development: split work into single-purpose stacked branches before writing code (split-pr), pair-run the implementation layer by layer (pacer), manage the resulting PR stack (stacked-prs), and hand reviewers a guided-reading deck with AC-tested demos (pr-deck). Every branch exists to be reviewed in minutes, not hours.",
   "author": {
     "name": "ericboy0224",
     "email": "ericboy0224@gmail.com"
