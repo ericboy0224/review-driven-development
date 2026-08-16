@@ -216,6 +216,9 @@ the rung exists and reads as a no-op. The mechanics, in order:
    table repeated in each PR body, and any deck pages or "slide N covers
    this rung" pointers. A fold that updates the code but not the tables
    leaves the stack contradicting itself.
+8. **Close with `/validate-stack`** (`--full --equals <reference>` after a
+   retro-split fold). Steps 1–7 are exactly the checks it automates; running
+   it is how you find the one you forgot.
 
 Two mechanics that will bite during the rebases:
 

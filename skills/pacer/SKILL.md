@@ -119,7 +119,10 @@ For each layer, in order:
 2. Run the full test suite.
 3. Summarize the Drift Log — this is the honest changelog of where the plan
    was wrong and what was decided instead.
-4. In stack mode: `gh stack submit` opens the whole ladder as draft PRs —
+4. In stack mode: run `/validate-stack` before submitting — it catches the
+   structural damage (broken chain, orphaned markers, a rung that grew past
+   the ceiling) that no per-layer checkpoint sees. Then `gh stack submit`
+   opens the whole ladder as draft PRs —
    let the user decide when each rung goes ready-for-review. Each PR
    description states the rung's single purpose and which placeholders it
    fills (split-pr's "PR descriptions" section is the format). The
