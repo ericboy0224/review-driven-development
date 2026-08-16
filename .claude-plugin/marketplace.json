@@ -1,0 +1,14 @@
+{
+  "name": "review-driven-development",
+  "owner": {
+    "name": "ericboy0224",
+    "email": "ericboy0224@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "review-driven-development",
+      "source": "./",
+      "description": "Split work into single-purpose stacked branches (split-pr), pair-run the implementation (pacer), manage the PR stack (stacked-prs)."
+    }
+  ]
+}
