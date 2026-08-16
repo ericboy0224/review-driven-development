@@ -72,9 +72,13 @@ Slide inventory (adjust, don't pad):
    is B0's diagram, drawn once.
 4. **Stack map** — the ladder table: rung, PR link, single purpose, size;
    the recommended review order.
-5. **One slide per rung** — its single-purpose sentence, review-focus
-   question, what stays placeholder and which rung fills it, and the demo
-   media for the ACs it makes real.
+5. **One slide per rung** — its single-purpose sentence, then the review
+   question **paired with how this rung answers it**. The answer states the
+   PR's actual handling, taken from the code and from decisions already
+   settled in earlier review rounds; it turns an open-ended review into a
+   check of a stated claim, and it stops reviewers re-opening questions the
+   branch already closed. Also list what stays placeholder and which rung
+   fills it, plus the demo media for the ACs it makes real.
 6. **Verification** — what was run (typecheck/lint/tests per rung), and for
    retro splits the equivalence claim (top of stack vs. reference branch).
 7. **How to review** — the 3–5 minute route: read B0 for architecture, then
@@ -98,8 +102,30 @@ conversion:
 
 ## 4. Publish to Drive (claude-in-chrome)
 
+**Uploading is the step that fights back.** Drive's "New → File upload"
+opens a native file dialog, which blocks browser automation outright, and
+its hidden `<input type="file">` is not in the DOM (nor the a11y tree) until
+that dialog is already opening — so `file_upload` has no ref to target. The
+Drive API path is closed too: its create-with-content call takes base64, and
+a deck is megabytes of it.
+
+What works is Drive's own drag-and-drop handler:
+
+1. Serve the file from a local HTTP server with
+   `Access-Control-Allow-Origin: *` (Chrome treats `http://127.0.0.1` as a
+   secure origin, so an https Drive page may fetch it).
+2. On the Drive folder page, `fetch` it into a `File` object, put it in a
+   `DataTransfer`, and dispatch `dragenter` → `dragover` → `drop` on the
+   element at the centre of `[role="main"]`. All three coming back
+   `defaultPrevented` is the signal Drive accepted the drop; confirm with a
+   screenshot, then dispatch `dragleave` to clear the drop overlay.
+3. Stop the local server as soon as the upload lands.
+
+Then:
+
 1. In the user's Drive, ensure `RDD-Demo/<KEY>/` exists (create the path if
    missing) — one folder per big PR; all of a stack's material lives there.
+   Folder creation *is* fine through the Drive API (no content payload).
 2. Upload the demo videos/GIFs first (their Drive URLs go into the PPTX's
    link overlays — capture URLs, rebuild the PPTX if placeholders were used).
 3. Upload the PPTX, then open it and **File → Save as Google Slides**; the

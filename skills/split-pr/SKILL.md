@@ -102,6 +102,23 @@ Walk the agreed tree and assign work to branches:
    produced a 376-line B0; total placeholder overhead across the ladder ran
    ~7%). Realistic mocks are part of B0's job — an `open()` that seats
    believable state keeps every outer rung runnable and demoable.
+8. **Fold a rung that cannot be judged alone.** Splitting has a floor as
+   well as a ceiling. Apply both tests to every candidate rung:
+   - **Does it change behavior the day it lands?** A rung whose diff
+     computes the same values as the rung below it (because the code that
+     would exercise it is still a placeholder) is inert — it reads as a
+     no-op to whoever reviews it.
+   - **Can a reviewer judge it without the next rung's context?** If
+     answering its review question means imagining states that only arrive
+     later, cause and effect have been split across two PRs.
+
+   Inert **and** unjudgeable → fold it into the rung that gives it meaning,
+   even when the merged result is larger. Size is not the test: a 47-line
+   rung that isolates a real hazard (an element lifecycle, a retry path) is
+   an excellent rung, while an 11-line rung whose value depends entirely on
+   the next one is a section of that next one. Prefer folding downstream
+   (into the rung that drives it), so the merged PR reads as flow → the
+   readings that flow produces.
 
 ## 3. Write the Branch Plan and stop
 
@@ -142,6 +159,37 @@ template. On top of that pattern, a stacked PR states:
   tests at the top; a retro split states the equivalence proof (top-of-stack
   diff vs. the reference branch is empty), which is what transfers the
   original PR's end-to-end verification to the stack.
+
+## Folding a rung after the ladder is already open
+
+Rungs get folded mid-flight — the floor test (§2.8) usually fails only once
+the rung exists and reads as a no-op. The mechanics, in order:
+
+1. **Placeholder markers first.** If the folded rung's tag appears in a
+   lower rung (`TODO(pacer:B3)` sitting in B0), fix it there before
+   anything else — a marker pointing at a rung that no longer exists is the
+   rot this convention exists to prevent. That amendment cascades, so
+   rebase the whole ladder from that point up.
+2. **Squash, don't replay.** The upper rung's commit was computed against
+   the folded one; replaying it alone silently drops the folded work.
+   `git reset --soft <rung below>` then re-commit is the safe shape.
+3. **Labels stay put; the sequence may gain a gap.** Renumbering rewrites
+   every marker in every rung — churn far beyond the gain. A ladder of
+   B0, B1, B2, B4, B5 is fine as long as every marker resolves to a rung
+   that is in the stack table.
+4. **Unstack before retargeting.** GitHub refuses a base change on a linked
+   stack member (`Cannot change the base branch because the pull request is
+   part of a stack`). Order: `gh stack unstack <n>` → `gh pr edit --base` →
+   close the folded PR with `--delete-branch` → `gh stack link` the
+   survivors.
+5. **Say why on the closed PR**, in its own comment: what made the rung
+   inert, and which PR now carries it. A silently closed PR reads as
+   abandoned work.
+6. **Re-verify the equivalence proof** (retro splits) and typecheck every
+   rung again — a fold changes what each rung sees beneath it.
+7. **The deck and the PR links are downstream artifacts.** Folding changes
+   the stack table, the rung pages, and every "slide N covers this rung"
+   pointer; regenerate them in the same pass or they contradict the stack.
 
 ## 5. Handoff
 
