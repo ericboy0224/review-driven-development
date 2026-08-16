@@ -143,7 +143,25 @@ conversation memory.
 
 Each rung's PR is written in the repo's own description style — read the
 repo's recent substantial PRs and follow their pattern, not a generic
-template. On top of that pattern, a stacked PR states:
+template.
+
+**Every PR in the stack carries the orientation itself**, in two fixed
+blocks, because a reviewer lands on whichever rung they were assigned and
+must not have to hunt for context:
+
+- **`## The stack`** — identical text in all of them: the feature's goal in
+  the user's terms, how the ladder is cut and why (skeleton first, hard
+  parts extracted), and the rung table with PR links and sizes. Generate it
+  once and inject it into each body so the copies cannot drift.
+- **`## This rung — B<k>, <name>`** — what this PR alone is responsible
+  for, its review question, what stays placeholder, and the ACs it carries.
+
+This is deliberately enough on its own: a guided-reading deck (`pr-deck`) is
+an addition for wide or cross-functional audiences, never the thing that
+makes the stack reviewable. Treat the deck as optional and the descriptions
+as mandatory.
+
+On top of the repo's pattern, a stacked PR states:
 
 - **Stack position and single purpose in the first paragraph** ("Rung B4 of
   the stack rooted at #NNN. One purpose: …").
@@ -173,10 +191,13 @@ the rung exists and reads as a no-op. The mechanics, in order:
 2. **Squash, don't replay.** The upper rung's commit was computed against
    the folded one; replaying it alone silently drops the folded work.
    `git reset --soft <rung below>` then re-commit is the safe shape.
-3. **Labels stay put; the sequence may gain a gap.** Renumbering rewrites
-   every marker in every rung — churn far beyond the gain. A ladder of
-   B0, B1, B2, B4, B5 is fine as long as every marker resolves to a rung
-   that is in the stack table.
+3. **Renumber, unless someone is already reviewing.** A gap (B0, B1, B2,
+   B4, B5) is internally consistent but reads as a mistake to everyone who
+   sees it — the first question is always "where did B3 go?". While the
+   stack is still draft, close the gap: renumber the rungs above the fold,
+   `sed` the `TODO(pacer:B<k>)` markers in the rungs below, and re-title the
+   PRs. Once review has started, the churn costs more than the gap does and
+   the labels stay put.
 4. **Unstack before retargeting.** GitHub refuses a base change on a linked
    stack member (`Cannot change the base branch because the pull request is
    part of a stack`). Order: `gh stack unstack <n>` → `gh pr edit --base` →
@@ -185,11 +206,26 @@ the rung exists and reads as a no-op. The mechanics, in order:
 5. **Say why on the closed PR**, in its own comment: what made the rung
    inert, and which PR now carries it. A silently closed PR reads as
    abandoned work.
-6. **Re-verify the equivalence proof** (retro splits) and typecheck every
-   rung again — a fold changes what each rung sees beneath it.
-7. **The deck and the PR links are downstream artifacts.** Folding changes
-   the stack table, the rung pages, and every "slide N covers this rung"
-   pointer; regenerate them in the same pass or they contradict the stack.
+6. **Re-verify by hand.** A fold changes what each rung sees beneath it, and
+   its rebases resolve conflicts manually, so re-run the equivalence proof
+   (retro splits) and typecheck every rung. The cheapest structural check is
+   the marker census — list `TODO(pacer:B<k>)` per rung and confirm it
+   decreases monotonically, each rung consuming exactly its own tag and the
+   top having none.
+7. **Regenerate every downstream artifact in the same pass** — the stack
+   table repeated in each PR body, and any deck pages or "slide N covers
+   this rung" pointers. A fold that updates the code but not the tables
+   leaves the stack contradicting itself.
+
+Two mechanics that will bite during the rebases:
+
+- **In a git worktree, `.git` is a file, not a directory.** `test -d
+  .git/rebase-merge` silently reports "no rebase in progress" while one is
+  very much in progress. Use `git rev-parse --git-path rebase-merge`.
+- **Pick the rebase boundary as the commit, not the branch.** `--onto <new
+  base> <old branch>` re-applies commits that are already upstream and
+  conflicts against them; `--onto <new base> <that rung's commit>^` replays
+  only the rung's own work.
 
 ## 5. Handoff
 

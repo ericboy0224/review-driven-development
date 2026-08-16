@@ -12,6 +12,16 @@ the feature is for, how the components hang together, what each rung is alone
 responsible for, and demo media proving the acceptance criteria against the
 running app.
 
+**This is an addition, not a requirement.** split-pr already puts the stack's
+goal, the rung table, and each rung's own purpose into every PR description,
+which is what makes the stack reviewable. Reach for a deck when the audience
+is wider than the reviewers — QA, PM, a design check, a team demo — or when
+the feature is visual enough that stills and clips carry more than prose. For
+an ordinary engineering review, the descriptions are the deliverable and this
+skill is skipped. Producing a deck also creates artifacts that must be
+regenerated whenever the ladder changes; don't take on that upkeep without a
+reason.
+
 The deck's audience includes non-engineers (QA, PM), so the deliverable is
 **Google Slides in Drive** — zero-friction inside the org's Workspace SSO —
 organized one folder per big PR: everything for a stack lives under
