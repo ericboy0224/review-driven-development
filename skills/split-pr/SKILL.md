@@ -230,6 +230,30 @@ their pattern, not a generic template. On top of that:
   PR's base after any stack operation.
 - **GitHub refuses a base change on a linked stack member.** Unstack first,
   then retarget, then re-link.
+- **`gh stack submit` pushes your *local* branches by name.** A stale local
+  branch sharing a name with a remote one will clobber it. Delete every
+  leftover local branch before submitting, and make local names match remote.
+
+### Reusing an existing PR number — three ways to destroy it
+
+A PR's head branch cannot be changed through the API, so the *only* way to
+reuse a PR is to push new content to its original head branch. Three
+operations kill it instead, all irreversibly — GitHub answers a reopen with
+`state cannot be changed. The <branch> branch was force-pushed or recreated`:
+
+- **Renaming the head branch.** Even though GitHub keeps a redirect and
+  retargets *base* refs, the open PR is closed and cannot be reopened.
+  Recreating the branch under its old name does not help. If a branch name no
+  longer describes its content, live with the name or open a new PR — never
+  rename to fix it.
+- **Pushing before fixing the base.** If the new head content is an ancestor
+  of the PR's current base, GitHub sees the head as already contained and
+  auto-closes the PR. **Retarget the base first, then push.**
+- **Deleting the branch**, obviously — including as a side effect of tidying
+  up "surplus" branches while a PR still points at one.
+
+Order that works: unstack → retarget every base → force-push content →
+re-link → delete leftovers last.
 
 ## Field notes
 
