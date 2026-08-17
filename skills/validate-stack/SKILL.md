@@ -46,10 +46,15 @@ ${CLAUDE_PLUGIN_ROOT}/skills/validate-stack/scripts/validate-stack.sh \
 - **`--marker-prefix`** defaults to `TODO(pacer:`. Pass the project's own
   marker if it differs.
 
-What it checks: base chain continuity, stack membership, rung sizes against
-the 100/400 bands, the marker census (monotonic decrease above the skeleton,
-each rung consuming its own tag, zero at the top, no tag naming a rung that
-does not exist), PR bodies linking closed PRs, equivalence, per-rung build.
+What it checks: base chain continuity, stack membership, the marker census,
+PR bodies linking closed PRs, equivalence, per-rung build.
+
+**The marker census must be zero on every rung, not merely decreasing.** A
+published PR never carries a placeholder, mock value, or TODO that a later PR
+removes (see split-pr's completeness rule) — any marker anywhere in the stack
+is an anomaly, not a bookkeeping entry. Rung sizes are reported for information
+only; there is no band to fail against, because readability decides boundaries
+and line count is a symptom.
 
 It prints anomalies only and exits non-zero when it found any. A clean run is
 one line — resist the urge to expand it into a checklist of green ticks, or
@@ -73,12 +78,15 @@ validator loses credibility.
   diff. The failure this catches is a rung whose sentence says one thing while
   the diff quietly does two — the sentence passes the no-"and" test only
   because the second thing went unmentioned.
-- **The splitting floor** (see split-pr §2.8): is any rung behaviorally inert
-  the day it lands *and* unjudgeable without the rung above it? Propose the
-  fold; do not perform it.
-- **Placeholder honesty.** Every `TODO(<marker>:B<k>)` names a rung that
-  exists, and each PR body says which of its own bodies are still
-  placeholders. A reviewer must never mistake scaffolding for a bug.
+- **The standalone test** (see split-pr §3): could a reviewer judge this rung
+  without opening another PR in the stack? A rung that is behaviorally inert
+  the day it lands, or whose review question can only be answered by reading
+  the rung above it, should be folded. Propose the fold; do not perform it.
+- **Is the stack earning its coordination cost?** Count the rungs against what
+  the ticket delivers. Many small rungs read fast individually and still cost
+  more in total, because the reviewer carries the whole ladder to judge any one
+  of them. If curating the commit history into one PR would serve the reader
+  better, say so — that is a legitimate finding.
 - **Table freshness.** The `## The stack` block repeated across the bodies
   lists exactly the live rungs, with sizes matching the script's numbers.
 

@@ -41,8 +41,8 @@ side effects only after an explicit OK.
 1. Resolve the stack: from the root PR walk the base-ref chain upward (or
    `gh stack view`); collect each PR's number, title, single-purpose
    sentence, diff stat, and review-focus line from its description.
-2. Read the Branch Plan and AC table — `docs/plans/<KEY>/plan.md` and the
-   B0 PR's acceptance-criteria section are the sources of truth.
+2. Read the Review Plan and AC table — `docs/plans/<KEY>/plan.md` and the
+   bottom PR's acceptance-criteria section are the sources of truth.
 3. Tooling check: node/npx (open-slide), `pptxgenjs` (installable ad hoc),
    a browser channel (claude-in-chrome or Playwright), and the user's Drive
    session in Chrome.
@@ -58,7 +58,7 @@ exercising an AC against the running app.
    `ac<N>-<slug>.png`. For the money flow (the AC sequence a reviewer most
    needs to *see* move), record a GIF or short mp4.
 3. Store under a local `deck-assets/<KEY>/` directory, and keep a map of
-   AC → asset → the rung that made it real (from the Branch Plan).
+   AC → asset → the commit or PR that made it real (from the Review Plan).
 4. **Degrade honestly**: if the environment cannot run (missing backend, no
    dev credentials), fall back to annotated code-walk screenshots and say so
    on the slide — never present a mock screenshot as a live capture.

@@ -1,22 +1,35 @@
 # review-driven-development
 
 A Claude Code plugin that treats **review as the unit of work**. Big PRs don't
-get reviewed — they get skimmed and LGTM'd. This plugin makes every branch
-small enough to be reviewed in minutes, by design rather than by discipline:
+get reviewed — they get skimmed and LGTM'd. But the fix is not "make every PR
+tiny": a change chopped into many small PRs costs the reviewer more, not less,
+because they must hold the whole ladder in their head to judge any one part of
+it.
 
-- **< 100 lines** — ideal: minimal mental load, precise feedback in minutes.
-- **200–400 lines** — the ceiling for one self-contained change.
-- **> 400 lines** — danger zone: reviewer fatigue, rubber-stamp approvals.
+What is actually scarce is the reviewer's **context** — how much they can hold
+at once, and how often they are forced to put it down and look somewhere else.
+This plugin optimises for that, in this order:
 
-## The three skills
+1. **Curate the commit history** so the change can be read commit by commit.
+   For most large-but-coherent work this is the whole answer.
+2. **Split into a few complete PRs** only when one PR stays hard to read even
+   with a clean history.
+3. **Never publish scaffolding.** No placeholder bodies, no mock values, no
+   TODOs that a later PR removes. A reviewer who meets one has to go read the
+   later PRs to find out whether it is a real defect — and an automated
+   reviewer just reports it as a finding.
+
+Line count is a symptom, never a target.
+
+## The skills
 
 | Skill | Role |
 | --- | --- |
-| `split-pr` | Plan the split. Right after a spec & plan exist, discuss the component architecture from the business goal down, then cut the work into a skeleton-first ladder of single-purpose branches. Also retro-splits an oversized existing branch into a stack. |
-| `pacer` | Pair-run (陪跑) the implementation branch by branch — skeleton first, placeholders down, one layer at a time, with a hard discussion checkpoint at every boundary. |
-| `validate-stack` | The mechanical sweep over an existing ladder: base chain, stack membership, per-rung build, placeholder-marker census, sizes, equivalence with the branch it replaced, and table drift across PR bodies. Run it after any fold, rebase, or trunk move — that is where stacks break silently. |
-| `stacked-prs` | The `gh stack` mechanics: create, link, rebase, repair, and merge the chain of PRs the other skills produce. |
-| `pr-deck` | **Optional.** For audiences wider than the reviewers (QA, PM, a demo), a guided-reading deck — business goal, architecture, stack map, one slide per rung, AC-tested demo media — authored in open-slide, delivered as Google Slides under `RDD-Demo/<KEY>/`, shared org-wide, linked from every PR. Ordinary reviews need only the PR descriptions split-pr writes. |
+| `split-pr` | Make a large change readable. Discuss the component architecture from the business goal down, then curate the commit history into a bottom-up narrative — and only if that is not enough, cut it into a small number of complete, self-contained PRs. Produces a `## Review Plan`. |
+| `pacer` | Pair-run (陪跑) the implementation — skeleton first, placeholders down, one layer at a time, with a hard discussion checkpoint at every boundary. Skeleton-first is how the work is *built*; the placeholders are folded away before anything is published. |
+| `validate-stack` | The mechanical sweep over a multi-PR stack: base chain, membership, per-rung build, equivalence with the branch it replaced, and table drift across PR bodies. Also flags any placeholder that reached a PR, and whether the stack is earning its coordination cost. |
+| `stacked-prs` | The `gh stack` mechanics: create, link, rebase, repair, and merge a chain of PRs. |
+| `pr-deck` | **Optional.** For audiences wider than the reviewers (QA, PM, a demo), a guided-reading deck delivered as Google Slides. Ordinary reviews need only the PR descriptions split-pr writes. |
 
 ## The flow
 
@@ -24,27 +37,45 @@ small enough to be reviewed in minutes, by design rather than by discipline:
 spec.md + plan.md          (however you produce them)
         │
         ▼
-/split-pr <KEY>            architecture discussion → ## Branch Plan in plan.md
+/split-pr <KEY>            architecture discussion → ## Review Plan in plan.md
         │
         ▼
-/pacer <KEY>               implement branch by branch, gh stack add per layer
+/pacer <KEY>               implement layer by layer on one branch,
+        │                  checkpointing at every boundary
+        ▼
+re-cut the history         bottom-up, complete commits, placeholders folded
+        │                  away, equivalence proved
+        ▼
+one PR (usually)           curated history, read commit by commit
+   or a few complete PRs   only when one is still too much to hold
         │
         ▼
-/validate-stack            structural sweep — rerun after any fold or rebase
+/validate-stack            structural sweep — only when there is a stack
         │
         ▼
-gh stack submit            one small, single-purpose PR per branch,
-                           each carrying the stack's goal and its own
-        │
-        ▼
-/pr-deck <KEY>             optional: a Google Slides deck for wider audiences
+/pr-deck <KEY>             optional: a deck for wider audiences
 ```
 
 Each skill also works standalone.
 
+## Field notes
+
+The bands this plugin used to enforce (<100 ideal, 400 ceiling) came out of
+two experiments, CR-2530 and CR-2532. Both confirmed that smaller PRs read
+faster individually — and both were rejected by reviewers for the same reason:
+the lower rungs carried placeholders, so every finding required a forward
+lookup into the higher rungs to check whether it was already solved. The time
+saved per PR was spent again on context switching, and automated review on the
+lower rungs produced only false alarms.
+
+The consistent ask was **整理 commit 讓 reviewer 看得出脈絡** — curate the
+commits so the narrative is visible. Reviewers already read big PRs commit by
+commit when they want the author's reasoning; a clean history serves that habit
+directly, at a fraction of the coordination cost of a stack.
+
 ## Install
 
 ```
-/plugin marketplace add ericboy0224/review-driven-development
+/plugin marketplace add plaxieappier/review-driven-development
 /plugin install review-driven-development@review-driven-development
 ```

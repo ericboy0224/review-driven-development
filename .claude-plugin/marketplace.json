@@ -1,14 +1,14 @@
 {
   "name": "review-driven-development",
   "owner": {
-    "name": "ericboy0224",
-    "email": "ericboy0224@gmail.com"
+    "name": "Eric Lin",
+    "email": "eric.jh.lin@appier.com"
   },
   "plugins": [
     {
       "name": "review-driven-development",
       "source": "./",
-      "description": "Split work into single-purpose stacked branches (split-pr), pair-run the implementation (pacer), manage the PR stack (stacked-prs)."
+      "description": "Make a large change readable: curate its commit history into a narrative (split-pr), pair-run the implementation layer by layer (pacer), and only split into complete PRs when one is still too much to hold."
     }
   ]
 }

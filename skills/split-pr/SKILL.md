@@ -1,268 +1,253 @@
 ---
 name: split-pr
-description: Split a task or an oversized branch into a ladder of single-purpose, review-sized branches — skeleton first, then component by component, complex logic extracted into its own branch. Use right after a spec & plan are generated ("plan 好了，來拆 branch", "/split-pr CR-123", "開工前先拆"), when a PR or branch has grown past review size ("PR 太大", "這筆 947 行怎麼辦", "幫我拆成 stack"), or before starting any feature big enough that one PR would exceed ~400 lines. Produces a Branch Plan for pacer to implement and a stack for stacked-prs to manage. Always plans and discusses first — never touches a branch before the user approves.
+description: Make a large change reviewable — first by curating its commit history into a readable narrative, and only if that is not enough, by cutting it into a few complete, self-contained PRs. Use right after a spec & plan are generated ("plan 好了，來拆 branch", "/split-pr CR-123", "開工前先拆"), when a PR or branch has grown past what a reviewer can hold ("PR 太大", "這筆 947 行怎麼辦", "幫我拆成 stack"), or before starting a feature big enough that one PR would be hard to read. Never ships placeholders, mock values, or TODOs that a later PR removes. Always plans and discusses first — never touches a branch before the user approves.
 ---
 
-# split-pr — cut work into review-sized, single-purpose branches
+# split-pr — make a large change readable
 
-A reviewer's attention is the scarcest resource in the pipeline. Under ~100
-changed lines they can hold the whole diff in their head and give precise
-feedback in minutes; a self-contained change tops out around 200–400 lines;
-past 400 the review degrades into a skim and an LGTM. This skill spends
-planning effort to keep every branch inside those bands — and to give each
-branch **exactly one purpose**, so its PR title alone tells the reviewer what
-to check.
+The scarce resource is not the reviewer's patience for long diffs. It is their
+**context**: how much of the change they can hold in their head at once, and
+how often they are forced to put it down and look somewhere else.
 
-Two modes, one algorithm:
+That gives two failure modes, and they pull in opposite directions:
 
-- **Mode A — plan-time split** (the normal path): a spec & plan exist, no code
-  yet. Discuss the architecture, then cut the future work into a branch
-  ladder before the first line is written.
-- **Mode B — retro split**: a branch/PR already exists and is too big.
-  Re-derive the structure from the finished code and synthesize the ladder
-  after the fact.
+- **Too big to hold.** One diff so large the review degrades into a skim.
+- **Too fragmented to hold.** So many PRs that the reviewer must carry the
+  whole ladder in their head to judge any one of them — and worse, must flip
+  forward to later PRs to check whether the thing they are about to flag is
+  already fixed there. Every such lookup is a context switch, and the cost of
+  those switches exceeds whatever was saved by the smaller diff.
 
-**Hard rule for both modes: present the plan, discuss, and get an explicit
-"OK" from the user before creating, moving, or linking any branch.** The
-deliverable of this skill is an approved plan; execution belongs to pacer
-(Mode A) or to a user-approved gh-stack run (Mode B).
+Line count is a symptom of the first, never a goal in itself. **Do not tune a
+split to hit a number.** Tune it so each PR can be understood and judged
+without leaving it.
+
+## The completeness rule
+
+**Never publish, in one PR, something a later PR removes.**
+
+No placeholder bodies, no mock return values, no `TODO(next-pr:…)` markers, no
+functions that exist only until the rung above deletes them. If the ticket is
+expected to deliver the whole feature, the PRs that deliver it must each be
+finished code.
+
+This is not a style preference. It is what makes review possible:
+
+- A reviewer who finds a problem in a placeholder cannot tell whether it is a
+  real defect or scaffolding that disappears two PRs later. To avoid filing a
+  false alarm they go and read the later PRs — the exact context switch this
+  skill exists to prevent.
+- Automated review is worse than useless on such a PR: it has no way to know
+  what the ladder intends, so it reports the scaffolding as findings, and the
+  human ends up doing the pass manually anyway.
+
+Skeleton-first is a fine way to *build* (see `pacer`) — write the contracts,
+then fill them layer by layer, discussing at each boundary. It is not a way to
+*publish*. When the work is ready to go out, the skeleton commit is folded into
+the layer that completes it.
+
+## Decision order
+
+Work down this list and stop at the first step that makes the change readable.
+
+1. **Curate the commit history.** For most large-but-coherent changes this is
+   the whole answer, and it is the cheapest. See §2.
+2. **Split into a few complete PRs.** Only when a single PR stays hard to read
+   even with a clean history. Aim for the smallest number of PRs that each
+   stand alone — two or three is usually right, rarely more than four. See §3.
+3. **Reconsider the ticket.** If the work genuinely cannot be told as one
+   story, the ticket is doing more than one thing and the split belongs in
+   Jira, not in git.
 
 Arguments: `[ticket-key | plan-path | branch/PR]`
 - Ticket key (e.g. `CR-123`) — resolve `docs/plans/<KEY>/plan.md` and
   `docs/specs/<KEY>/spec.md` (cs-jira convention), or explicit file paths.
-- A branch name, PR number, or PR URL — Mode B.
-- Nothing — ask which; if the current branch is far ahead of its base,
-  suggest Mode B on it.
+- A branch name, PR number, or PR URL — an existing branch to make readable.
+- Nothing — ask which; if the current branch is far ahead of its base, suggest
+  working on it.
 
 ## 0. Intake
 
-1. Mode A: Read the plan (and spec if present). Mode B: get the real diff —
-   `gh pr view` for base/size, `git diff <base>...<head> --stat` for the file
-   list, then read the changed files.
-2. Identify the trunk the ladder will land on (repo default branch or an
-   integration/feature branch). Note the repo's branch-naming convention from
-   recent branches — the ladder must follow it.
-3. Check `gh stack` is available (`gh extension list`); if not, note it in
-   the plan — the stacked-prs skill covers installation.
+1. Get the real diff — `gh pr view` for base/size, `git diff <base>...<head>
+   --stat` for the file list, then read the changed files. For a plan-time run
+   with no code yet, read the plan and spec instead.
+2. Identify the trunk. Note the repo's branch-naming convention from recent
+   branches, and read two or three recent substantial PR descriptions for the
+   house style.
+3. Read the existing commits (`git log --stat <base>..<head>`). Often the
+   author already told the story and it only needs tidying.
 
-## 1. Architecture discussion — before any splitting
+## 1. Architecture discussion — before anything else
 
-Do not open with a branch list. Branch boundaries fall out of component
-boundaries, and component boundaries are a design decision the user must own.
+Do not open with a branch list or a commit list. Boundaries fall out of
+component boundaries, and those are a design decision the user must own.
 
-1. Restate the **business goal** in one or two sentences: what the user of
-   the product gets, per the spec's own words. Confirm it.
-2. Propose a **component architecture sketch**: the component/module tree
-   from the outermost surface (route, page, dialog, CLI entry) down to leaf
-   utilities — names, one-line responsibilities, who renders/imports whom,
-   and where state lives. Ground it in the plan's steps and the repo's
-   existing patterns; flag where the plan is silent or ambiguous.
-3. Discuss until the tree is agreed. This is the same "cheapest moment to
-   change architecture" that pacer's skeleton tour exploits — here it comes
-   even earlier, before the skeleton exists. Ask at most 3 highest-leverage
-   questions per round (module boundaries, state ownership, data flow
-   direction).
+1. Restate the **business goal** in one or two sentences: what the user of the
+   product gets. Confirm it.
+2. Propose a **component sketch**: the module tree from the outermost surface
+   inward — names, one-line responsibilities, who imports whom, where state
+   lives. Flag where the plan is silent.
+3. Discuss until the tree is agreed. Ask at most 3 highest-leverage questions
+   per round (module boundaries, state ownership, data flow direction).
 
-Only an agreed component tree proceeds to step 2.
+## 2. Curate the commit history
 
-## 2. Cut the ladder — skeleton first, then top-down recursion
+The goal: a reviewer can read the commits in order and watch the change being
+built, without ever needing a later commit to make sense of an earlier one.
 
-Walk the agreed tree and assign work to branches:
+**Build bottom-up, not skeleton-first.** Leaf utilities and their tests land
+first, complete; the wiring that turns them on lands last. The final commit is
+usually the one that changes user-visible behaviour, and it is short because
+everything beneath it is already in place and already tested.
 
-1. **B0 is always the skeleton**: every planned file exists with real
-   exported types, real signatures, real wiring (routing, DI, context
-   providers, imports) — and placeholder bodies only, tagged
-   `TODO(pacer:B<k>)` for the branch that will fill them. B0 must typecheck.
-   B0 is the review of the *architecture itself*: a reviewer approving B0 is
-   approving the component tree.
-2. **Recurse top-down**: from the outermost component inward, each tree node
-   gets a branch that fills that node's real body while calls into deeper
-   nodes stay placeholders. Never fill deeper than the current node.
-3. **Complex-logic extraction**: entering a node, judge whether it contains
-   complex logic — an algorithm, a state machine, heavy edge-case handling,
-   tricky async orchestration. If so, the node's branch fills only the plain
-   structure (layout, prop plumbing, straightforward handlers) and leaves the
-   complex part as a placeholder; a dedicated branch directly below it fills
-   the complex logic alone. A reviewer of that branch reviews *only* the
-   hard part, with the structure already approved around it.
-4. **Size bands**: aim under 100 changed lines per branch; hard ceiling 400.
-   A node whose fill would exceed the ceiling is split along its internal
-   seams (state vs. actions vs. render; parse vs. transform vs. emit) and
-   recursed. A leaf utility may ride along with its only consumer if the
-   pair stays under ~200 lines; otherwise it gets its own branch.
-5. **Single purpose test**: every branch must be describable in one sentence
-   with no "and". If the sentence needs an "and", split again.
-6. **A function belongs to its caller's rung**, not to its file region's:
-   a helper cut away from its only caller leaves an unused symbol behind and
-   breaks the rung's typecheck (`noUnusedLocals`). Move `settle()`-like
-   helpers with the rung that first calls them, even when the plan filed
-   them under "state".
-7. **Estimate the skeleton at ~1/3 of the total diff.** Contracts, wiring
-   and realistic mocks are thicker than they look (field data: a 947-line PR
-   produced a 376-line B0; total placeholder overhead across the ladder ran
-   ~7%). Realistic mocks are part of B0's job — an `open()` that seats
-   believable state keeps every outer rung runnable and demoable.
-8. **Fold a rung that cannot be judged alone.** Splitting has a floor as
-   well as a ceiling. Apply both tests to every candidate rung:
-   - **Does it change behavior the day it lands?** A rung whose diff
-     computes the same values as the rung below it (because the code that
-     would exercise it is still a placeholder) is inert — it reads as a
-     no-op to whoever reviews it.
-   - **Can a reviewer judge it without the next rung's context?** If
-     answering its review question means imagining states that only arrive
-     later, cause and effect have been split across two PRs.
+Each commit:
 
-   Inert **and** unjudgeable → fold it into the rung that gives it meaning,
-   even when the merged result is larger. Size is not the test: a 47-line
-   rung that isolates a real hazard (an element lifecycle, a retry path) is
-   an excellent rung, while an 11-line rung whose value depends entirely on
-   the next one is a section of that next one. Prefer folding downstream
-   (into the rung that drives it), so the merged PR reads as flow → the
-   readings that flow produces.
+- **Is complete on its own.** It compiles, its tests pass, and nothing in it
+  is waiting for a later commit to be finished or removed.
+- **Has one purpose, describable in a sentence with no "and."**
+- **Carries its own tests.** A util and the tests that prove it belong in the
+  same commit; a reviewer judging the util should not have to search for them.
+- **Says why in the body**, not what. The diff already says what. Follow the
+  repo's existing commit-message shape.
 
-## 3. Write the Branch Plan and stop
+What to eliminate:
 
-Append to the plan file (Mode A) or write a standalone plan file (Mode B):
+- Fixup commits, "address review", "typo", "rename after feedback". Squash
+  them into the commit whose story they belong to.
+- Commits that only exist to be undone later.
+- Mechanical churn mixed into a behaviour commit — a pure move or rename gets
+  its own commit so the reviewer can skip it in seconds instead of hunting for
+  the real change inside it.
+
+The rewrite is `git rebase --onto` plus `git reset --soft <base>` and
+re-committing in the new order. Verify by proving equivalence: the tree at the
+end of the curated history must be identical to the tree before it
+(`git diff <original-head> <curated-head>` is empty). Never rewrite the
+original branch in place — cut a new one and keep the original until the user
+says otherwise.
+
+Then say so in the PR description: tell the reviewer the history is curated and
+worth reading commit by commit, and list the commits with one line each.
+
+## 3. If it still needs splitting — split into complete PRs
+
+Only reached when a single curated PR is still too much to hold. Cut along
+**seams where the work is genuinely finished on one side**, so each PR is a
+thing that could merge on its own and leave the codebase coherent.
+
+Good seams, in rough order of preference:
+
+1. **A pure refactor that unlocks the feature** — a move, an extraction, a
+   shared type. It changes no behaviour, so it reviews in minutes and gets out
+   of the way of the real change.
+2. **A self-contained module with its own tests** — a matching algorithm, a
+   parser, a validator. Complete, exercised by tests, judged on its own terms.
+   It is legitimately not called yet; say so in the description, and open the
+   PR that calls it at the same time so the reviewer can see where it lands.
+3. **The integration that turns it on** — the wiring, the UI, the behaviour
+   change. This is where the product decisions live and where review attention
+   is worth the most.
+
+Bad seams — every one of these forces a forward lookup:
+
+- A contracts-only PR whose bodies arrive later.
+- A structure PR whose logic arrives later.
+- Any cut that leaves one side computing a value nothing consumes yet *and*
+  unable to be judged without seeing the consumer.
+
+Each PR must pass the standalone test: **could a reviewer judge this without
+opening any other PR in the stack?** If not, merge it with the PR that answers
+its question.
+
+## 4. Write the plan and stop
+
+Append to the plan file, or write a standalone one:
 
 ```markdown
-## Branch Plan
-- trunk: <branch the ladder lands on>
-- B0 <name>: skeleton — <files> — est ~<n> lines
-- B1 <name>: <single-purpose sentence> — <files> — est ~<n>
-- B2 <name>: <sentence> — <files> — est ~<n> — extracted from B1 (complex logic: <what>)
-...
+## Review Plan
+- trunk: <branch this lands on>
+- shape: single PR with curated history | N complete PRs
+- commits (per PR, in order):
+  1. <one-sentence purpose> — <files> — est ~<n> lines
+  2. ...
+- what each PR can be judged on without leaving it: <one line each>
 - open questions: <anything the discussion left undecided>
 ```
 
-Branch names follow the repo's convention (usually `<KEY>-<slug>`). Present
-the ladder with per-branch estimates and **wait for the user's OK**. They may
-merge rungs, re-order, or push a boundary — update the plan, not the
-conversation memory.
+Present it and **wait for the user's OK**. They may merge steps, re-order, or
+move a boundary — update the plan file, not the conversation memory.
 
-## 4. PR descriptions
+**No branch mutation, no force-push, no PR creation before that OK.**
 
-Each rung's PR is written in the repo's own description style — read the
-repo's recent substantial PRs and follow their pattern, not a generic
-template.
+## 5. PR descriptions
 
-**Every PR in the stack carries the orientation itself**, in two fixed
-blocks, because a reviewer lands on whichever rung they were assigned and
-must not have to hunt for context:
+Written in the repo's own style — read its recent substantial PRs and follow
+their pattern, not a generic template. On top of that:
 
-- **`## The stack`** — identical text in all of them: the feature's goal in
-  the user's terms, how the ladder is cut and why (skeleton first, hard
-  parts extracted), and the rung table with PR links and sizes. Generate it
-  once and inject it into each body so the copies cannot drift.
-- **`## This rung — B<k>, <name>`** — what this PR alone is responsible
-  for, its review question, what stays placeholder, and the ACs it carries.
-
-This is deliberately enough on its own: a guided-reading deck (`pr-deck`) is
-an addition for wide or cross-functional audiences, never the thing that
-makes the stack reviewable. Treat the deck as optional and the descriptions
-as mandatory.
-
-On top of the repo's pattern, a stacked PR states:
-
-- **Stack position and single purpose in the first paragraph** ("Rung B4 of
-  the stack rooted at #NNN. One purpose: …").
-- **The review-focus question** — the one thing this rung asks the reviewer
-  to judge. Small PRs earn this sentence; a 947-line PR never could.
-- **What stays placeholder and which rung fills it** — honest
-  `TODO(pacer:B<k>)` accounting, so a reviewer never mistakes scaffolding
-  for a bug.
-- **The maps live once, at the bottom**: the stack table and the
-  AC-to-rung table go in B0's PR ("listed so the split is explicit rather
-  than implied"); later rungs carry only their own AC lines and link back.
-- **Verification claims match what ran**: per-rung typecheck/lint, full
-  tests at the top; a retro split states the equivalence proof (top-of-stack
-  diff vs. the reference branch is empty), which is what transfers the
-  original PR's end-to-end verification to the stack.
-
-## Folding a rung after the ladder is already open
-
-Rungs get folded mid-flight — the floor test (§2.8) usually fails only once
-the rung exists and reads as a no-op. The mechanics, in order:
-
-1. **Placeholder markers first.** If the folded rung's tag appears in a
-   lower rung (`TODO(pacer:B3)` sitting in B0), fix it there before
-   anything else — a marker pointing at a rung that no longer exists is the
-   rot this convention exists to prevent. That amendment cascades, so
-   rebase the whole ladder from that point up.
-2. **Squash, don't replay.** The upper rung's commit was computed against
-   the folded one; replaying it alone silently drops the folded work.
-   `git reset --soft <rung below>` then re-commit is the safe shape.
-3. **Renumber, unless someone is already reviewing.** A gap (B0, B1, B2,
-   B4, B5) is internally consistent but reads as a mistake to everyone who
-   sees it — the first question is always "where did B3 go?". While the
-   stack is still draft, close the gap: renumber the rungs above the fold,
-   `sed` the `TODO(pacer:B<k>)` markers in the rungs below, and re-title the
-   PRs. Once review has started, the churn costs more than the gap does and
-   the labels stay put.
-4. **Unstack before retargeting.** GitHub refuses a base change on a linked
-   stack member (`Cannot change the base branch because the pull request is
-   part of a stack`). Order: `gh stack unstack <n>` → `gh pr edit --base` →
-   close the folded PR with `--delete-branch` → `gh stack link` the
-   survivors.
-5. **Say why on the closed PR**, in its own comment: what made the rung
-   inert, and which PR now carries it. A silently closed PR reads as
-   abandoned work.
-6. **Re-verify by hand.** A fold changes what each rung sees beneath it, and
-   its rebases resolve conflicts manually, so re-run the equivalence proof
-   (retro splits) and typecheck every rung. The cheapest structural check is
-   the marker census — list `TODO(pacer:B<k>)` per rung and confirm it
-   decreases monotonically, each rung consuming exactly its own tag and the
-   top having none.
-7. **Regenerate every downstream artifact in the same pass** — the stack
-   table repeated in each PR body, and any deck pages or "slide N covers
-   this rung" pointers. A fold that updates the code but not the tables
-   leaves the stack contradicting itself.
-8. **Close with `/validate-stack`** (`--full --equals <reference>` after a
-   retro-split fold). Steps 1–7 are exactly the checks it automates; running
-   it is how you find the one you forgot.
-
-Two mechanics that will bite during the rebases:
-
-- **In a git worktree, `.git` is a file, not a directory.** `test -d
-  .git/rebase-merge` silently reports "no rebase in progress" while one is
-  very much in progress. Use `git rev-parse --git-path rebase-merge`.
-- **Pick the rebase boundary as the commit, not the branch.** `--onto <new
-  base> <old branch>` re-applies commits that are already upstream and
-  conflicts against them; `--onto <new base> <that rung's commit>^` replays
-  only the rung's own work.
-
-## 5. Handoff
-
-- **Mode A**: on approval the skill is done. Point the user at
-  `/pacer <KEY>` — pacer detects `## Branch Plan` and implements the ladder
-  branch by branch, running `gh stack` as it goes (see pacer's own doc).
-- **Mode B**: on approval, execute the synthesis (next section), then hand
-  the stack to stacked-prs conventions for submit/link.
-
-## Mode B specifics — synthesizing a ladder from finished code
-
-The finished branch's history is usually review-driven, not layer-driven, so
-cherry-picking commits into groups produces ugly intermediate states. Instead
-**re-derive**: treat the final code as the target, and build each rung as a
-checkout of the final content *reduced to that rung's scope* — outer rungs
-carry the final files with deeper bodies replaced by placeholders.
-
-- Every rung must typecheck (and lint/test where the repo defines it) — run
-  the checks for real on each rung before stacking the next.
-- The original branch is never deleted or rewritten; it stays as the
-  reference until the whole stack has replaced it and the user says so.
-- Say plainly in each PR description that the state is synthesized for
-  review, which parts are placeholders, and which rung fills them.
-- Existing review threads on the original PR do not transfer. Confirm the
-  user accepts orphaning them **before** executing — this is part of the
-  plan approval, not an execution-time surprise.
+- **The goal in the user's terms**, in the first paragraph.
+- **The reading route**: whether to read the diff whole or commit by commit,
+  and the commit list with one line each if the latter.
+- **The decisions this PR asks the reviewer to judge** — the two or three
+  places where a different choice was available. This is what reviewers
+  actually want and what a big diff buries.
+- **When there is more than one PR**: a short shared block naming the other
+  PRs and what each owns, so a reviewer landing on any one of them knows the
+  shape without opening the rest. Keep it to a table and a sentence — if it
+  needs more than that, the split is too fine.
+- **Verification claims match what ran.** State what was executed. If the
+  history was curated rather than re-run end to end, say that the equivalence
+  proof is what carries the original verification over.
 
 ## Rules
 
-- No branch mutation before explicit user approval of the Branch Plan.
-- One purpose per branch; the one-sentence-no-"and" test is the gate.
-- <100 lines ideal, 400 hard ceiling, split along internal seams when over.
-- Skeleton (B0) always exists and always compiles — it is the architecture
-  review.
-- Complex logic never hides inside a structure branch — extract it.
+- No branch mutation before explicit user approval of the plan.
+- Never publish a placeholder, mock value, or TODO that a later PR removes.
+- Every PR passes the standalone test: judgeable without opening another PR.
+- Every commit is complete, single-purpose, and carries its own tests.
+- Readability decides the boundaries; line count is a symptom, not a target.
+- Prefer curating history over splitting; prefer two PRs over five.
+- Never rewrite the original branch in place — keep it until the user says so.
+- Prove equivalence after any history rewrite (`git diff` against the original
+  head is empty).
 - Speak the user's language in discussion (中文使用者就用中文討論); the plan
-  file, branch names, and PR text stay in English.
+  file, branch names, commit messages, and PR text stay in English.
+
+## Mechanics that will bite
+
+- **In a git worktree, `.git` is a file, not a directory.** `test -d
+  .git/rebase-merge` silently reports "no rebase in progress" while one is very
+  much in progress. Use `git rev-parse --git-path rebase-merge`.
+- **Pick the rebase boundary as the commit, not the branch.** `--onto <new
+  base> <old branch>` re-applies commits that are already upstream and
+  conflicts against them; `--onto <new base> <that commit>^` replays only that
+  commit's own work.
+- **`git rebase --update-refs`** moves every branch ref that points into the
+  range being replayed — essential when amending a commit that several
+  branches sit on top of.
+- **`gh stack link` assumes the trunk is the default branch.** It will silently
+  retarget the bottom PR to `master` and inflate its diff. Use `gh stack init
+  -b <trunk>` followed by `gh stack submit --auto`, and re-check the bottom
+  PR's base after any stack operation.
+- **GitHub refuses a base change on a linked stack member.** Unstack first,
+  then retarget, then re-link.
+
+## Field notes
+
+- **CR-2530** (947 lines, six rungs, skeleton-first): the split did make each
+  PR faster to read, and the reviewers said so. What they also said: the
+  placeholders in the lower rungs forced them to keep opening the higher ones
+  to check whether a problem was already solved, and automated review on the
+  lower rungs produced only false alarms. The speed gained per PR was spent
+  again on context switching.
+- **CR-2532** (1285 lines, nine rungs, retro split): too fine. Nine PRs for a
+  two-point ticket meant no rung could be judged without the ladder in mind,
+  and the synthesized placeholders never existed in the real work — they were
+  manufactured purely to stage the review. A retro split is exactly where
+  skeleton-first has the least to offer: the architecture is already settled by
+  the time you are splitting, so the skeleton buys no early feedback and costs
+  the reviewer a forward lookup on every rung.
+- The consistent ask across both: **整理 commit 讓 reviewer 看得出脈絡** —
+  curate the commits so the narrative is visible. Reviewers already read big
+  PRs commit by commit when they want the author's reasoning; a clean history
+  serves that habit directly, at a fraction of the coordination cost of a
+  stack.

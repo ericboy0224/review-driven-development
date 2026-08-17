@@ -1,6 +1,6 @@
 ---
 name: pacer
-description: Pair-run (陪跑) the implementation of a spec & plan — top-down, skeleton-first with placeholders, filling layers from outside in, with a discussion checkpoint at every layer boundary and all deviations written back into the plan. Use when the user wants to implement a plan interactively instead of one-shot execution — "陪我實作", "陪跑 CR-123", "/pacer", "implement this plan with me step by step", "骨架先行", or when they distrust a generated plan and want to validate it during implementation rather than on paper. Works with cs-jira convention (docs/specs/<KEY>/spec.md + docs/plans/<KEY>/plan.md) or explicit file paths. When the plan carries a ## Branch Plan (from split-pr), pacer implements it branch by branch as a gh stack.
+description: Pair-run (陪跑) the implementation of a spec & plan — top-down, skeleton-first with placeholders, filling layers from outside in, with a discussion checkpoint at every layer boundary and all deviations written back into the plan. Use when the user wants to implement a plan interactively instead of one-shot execution — "陪我實作", "陪跑 CR-123", "/pacer", "implement this plan with me step by step", "骨架先行", or when they distrust a generated plan and want to validate it during implementation rather than on paper. Works with cs-jira convention (docs/specs/<KEY>/spec.md + docs/plans/<KEY>/plan.md) or explicit file paths. Skeleton-first is how the work is built, never how it is published — placeholders are gone before anything is opened for review.
 ---
 
 # Pacer — implementation pair-running over a spec & plan
@@ -18,6 +18,14 @@ rotting.
 The deliverable is not just working code — it's a validated plan and a user
 who understood and shaped every architectural decision at the moment it was
 cheapest to change.
+
+**Skeleton-first is a build method, not a publishing method.** The placeholders
+exist so you and the user can walk the architecture before it is expensive; they
+are scaffolding for the two of you, not artifacts for a reviewer. By the time
+anything is opened for review, every marker is gone and the history has been
+curated into a narrative that reads bottom-up (see `split-pr` §2). A reviewer
+who meets a placeholder has to go looking for the PR that removes it, and that
+lookup costs more than the smaller diff ever saved.
 
 Arguments: `[ticket-key | plan-path]`
 - Ticket key (e.g. `CR-123`) — resolve via cs-jira convention:
@@ -39,13 +47,13 @@ Arguments: `[ticket-key | plan-path]`
 
 ## 1. Layering — re-slice the plan by depth, not by plan order
 
-**If the plan contains a `## Branch Plan` section (written by split-pr), adopt
-it as the layer map — do not re-slice.** Each rung B0..Bn is one layer *and*
-one branch: B0 is the skeleton, each later rung fills one component (or one
-extracted piece of complex logic). The architecture discussion already
-happened in split-pr; confirm the Branch Plan is still current (no drift
-since approval) and go straight to section 2, running **stack mode** (see the
-layer loop). Placeholder tags use the rung id: `TODO(pacer:B<k>)`.
+**If the plan contains a `## Review Plan` section (written by split-pr), adopt
+its commit list as the layer map — do not re-slice.** The architecture
+discussion already happened there; confirm the plan is still current (no drift
+since approval) and go straight to section 2. Note that the Review Plan is
+ordered for *reading* — bottom-up, leaves first — while the layer loop below
+builds top-down. Both orders are fine and they are reconciled at closeout, when
+the history is re-cut into reading order.
 
 Otherwise, re-organize the plan's steps into layers yourself:
 
@@ -67,11 +75,11 @@ confirm"). Layers with no risky assumption need no discussion later; say so.
 Present the layer map to the user, discuss, and get approval. Then append it
 to the plan file under `## Pacer Layers` and initialize `## Pacer Progress`.
 
-## 2. Skeleton (L0 / B0)
+## 2. Skeleton (L0)
 
-1. In stack mode, start the stack first: `gh stack init --base <trunk>` (or
-   `gh stack add` if a stack already exists), branch named per the Branch
-   Plan. See the stacked-prs skill for the mechanics.
+1. Work on one branch. Do not open a PR yet, and do not start a stack — the
+   publishing shape is decided at closeout, once the whole thing exists and its
+   real seams are visible.
 2. Implement the full skeleton: real files, real signatures, real wiring —
    placeholder bodies only. Placeholder convention (greppable, layer-tagged):
    ```ts
@@ -83,12 +91,14 @@ to the plan file under `## Pacer Layers` and initialize `## Pacer Progress`.
 4. Give the user a **skeleton tour**: file tree, key signatures, the data
    flow in one paragraph — then ask your 1–3 highest-leverage questions
    (module boundaries, naming, direction of data flow). This is the cheapest
-   moment in the whole task to change architecture; say so explicitly. In
-   stack mode the tour doubles as the B0 review: what the user approves here
-   is what the reviewer of the skeleton PR will approve.
+   moment in the whole task to change architecture; say so explicitly. The tour
+   is the user's review of the architecture — it replaces showing a skeleton to
+   anyone else.
 5. Iterate until the user approves. Commit: `chore(<KEY>): skeleton (pacer L0)`.
+   This commit is scaffolding and will be folded away at closeout; keep it as a
+   checkpoint, not as something a reviewer will ever see.
 
-## 3. Layer loop (L1 → Ln / B1 → Bn)
+## 3. Layer loop (L1 → Ln)
 
 For each layer, in order:
 
@@ -96,7 +106,6 @@ For each layer, in order:
    layer, then — this is the 陪跑 moment — proactively flag anything that now
    looks questionable given what the previous layers revealed. Max 3 items.
    If the user wants to change approach, update the layer map first.
-   In stack mode, open the layer's branch now: `gh stack add <branch-name>`.
 2. **Implement this layer only.** Replace placeholders tagged for this layer;
    calls into deeper layers remain placeholders. Never implement deeper than
    the current layer, even when trivial — the discipline is the point.
@@ -105,9 +114,9 @@ For each layer, in order:
    against mock-returning inners by design.
 4. **Checkpoint (hard stop)**: report outcome, diff stat, deviations from
    plan, and at most 3 open questions. Wait for the user. They may: continue
-   inward, adjust this layer, or re-slice remaining layers. In stack mode,
-   check the diff stat against the Branch Plan's estimate — a rung growing
-   past 400 lines gets split (a new rung in the Branch Plan), never absorbed.
+   inward, adjust this layer, or re-slice remaining layers. A layer that has
+   grown far past its estimate is a signal the plan mis-scoped it — say so and
+   let the user decide, rather than splitting on the number alone.
 5. **Sync the plan**: record any deviation in `## Drift Log` in the plan file
    (what changed, why, date); update `## Pacer Progress`. Commit:
    `feat(<KEY>): <layer summary> (pacer L<k>)`.
@@ -119,19 +128,16 @@ For each layer, in order:
 2. Run the full test suite.
 3. Summarize the Drift Log — this is the honest changelog of where the plan
    was wrong and what was decided instead.
-4. In stack mode: run `/validate-stack` before submitting — it catches the
-   structural damage (broken chain, orphaned markers, a rung that grew past
-   the ceiling) that no per-layer checkpoint sees. Then `gh stack submit`
-   opens the whole ladder as draft PRs —
-   let the user decide when each rung goes ready-for-review. Each PR
-   description states the rung's single purpose and which placeholders it
-   fills (split-pr's "PR descriptions" section is the format). The
-   stacked-prs skill covers rebase/link/merge from here. Before the rungs go
-   ready-for-review, offer `/pr-deck <KEY>` — the guided-reading deck that
-   orients reviewers across the whole ladder.
+4. **Re-cut the history for reading.** The build order was top-down; the
+   reading order is bottom-up. Hand off to `split-pr` §2: fold the skeleton
+   commit into the layers that completed it, drop every fixup, and re-commit so
+   each commit is complete, single-purpose, and carries its own tests. Prove
+   equivalence — the tree after the rewrite must be identical to the tree
+   before it. Only then decide whether one PR with that history is enough, or
+   whether it needs splitting into a small number of complete PRs (`split-pr`
+   §3). Never publish the layer commits as-is.
 5. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
-   handles PR creation and the Jira comment (skip PR creation in stack mode —
-   the stack already opened them).
+   handles PR creation and the Jira comment.
 
 ## Rules
 
@@ -144,9 +150,9 @@ For each layer, in order:
   layer and checkpoint early.
 - The plan file is a living document: deviations go in the Drift Log the
   moment they're decided — never silently diverge from the written plan.
-- Placeholder markers are the single source of "what's left":
-  `TODO(pacer:L<k>)` (or `B<k>` in stack mode), always greppable, always
-  layer-tagged.
+- Placeholder markers are the single source of "what's left": `TODO(pacer:L<k>)`,
+  always greppable, always layer-tagged — and always gone before anything is
+  published. A marker that reaches a reviewer is a bug in the process.
 - Speak the user's language at checkpoints (中文使用者就用中文討論)；code,
   commits, and plan-file updates stay in English.
 
@@ -166,5 +172,5 @@ For each layer, in order:
 - 2026-08-14 L1: plan assumed X; actually Y — decided Z (user confirmed)
 ```
 
-(In stack mode the Branch Plan replaces `## Pacer Layers`; Progress and Drift
-Log work the same, keyed by rung id.)
+(When split-pr wrote a `## Review Plan`, it replaces `## Pacer Layers`;
+Progress and Drift Log work the same.)
