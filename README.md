@@ -77,6 +77,6 @@ directly, at a fraction of the coordination cost of a stack.
 ## Install
 
 ```
-/plugin marketplace add plaxieappier/review-driven-development
+/plugin marketplace add ericboy0224/review-driven-development
 /plugin install review-driven-development@review-driven-development
 ```
