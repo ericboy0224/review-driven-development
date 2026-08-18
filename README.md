@@ -25,6 +25,7 @@ Line count is a symptom, never a target.
 
 | Skill | Role |
 | --- | --- |
+| `conventional-commits` | The message format every commit in this flow uses: `<type>(<scope>): <description>`, the type-choice ambiguities resolved, and when a message needing an "and" means the commit should be split. Loaded automatically whenever a commit message is being written. |
 | `split-pr` | Make a large change readable. Discuss the component architecture from the business goal down, then curate the commit history into a bottom-up narrative — and only if that is not enough, cut it into a small number of complete, self-contained PRs. Produces a `## Review Plan`. |
 | `pacer` | Pair-run (陪跑) the implementation — skeleton first, placeholders down, one layer at a time, with a hard discussion checkpoint at every boundary. Skeleton-first is how the work is *built*; the placeholders are folded away before anything is published. |
 | `validate-stack` | The mechanical sweep over a multi-PR stack: base chain, membership, per-rung build, equivalence with the branch it replaced, and table drift across PR bodies. Also flags any placeholder that reached a PR, and whether the stack is earning its coordination cost. |

@@ -107,8 +107,9 @@ Each commit:
 - **Has one purpose, describable in a sentence with no "and."**
 - **Carries its own tests.** A util and the tests that prove it belong in the
   same commit; a reviewer judging the util should not have to search for them.
-- **Says why in the body**, not what. The diff already says what. Follow the
-  repo's existing commit-message shape.
+- **Says why in the body**, not what. The diff already says what. Load the
+  `conventional-commits` skill before writing any of these messages — it owns
+  the type choice, the subject rules and the scope decision.
 
 What to eliminate:
 

@@ -8,7 +8,7 @@
     {
       "name": "review-driven-development",
       "source": "./",
-      "description": "Make a large change readable: curate its commit history into a narrative (split-pr), pair-run the implementation layer by layer (pacer), and only split into complete PRs when one is still too much to hold."
+      "description": "Write every commit as a Conventional Commit, curate a large change's history into a readable narrative (split-pr), pair-run the implementation (pacer), and split into complete PRs only when one is still too much to hold."
     }
   ]
 }
