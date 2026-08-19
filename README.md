@@ -31,6 +31,7 @@ Line count is a symptom, never a target.
 | `validate-stack` | The mechanical sweep over a multi-PR stack: base chain, membership, per-rung build, equivalence with the branch it replaced, and table drift across PR bodies. Also flags any placeholder that reached a PR, and whether the stack is earning its coordination cost. |
 | `stacked-prs` | The `gh stack` mechanics: create, link, rebase, repair, and merge a chain of PRs. |
 | `pr-deck` | **Optional.** For audiences wider than the reviewers (QA, PM, a demo), a guided-reading deck delivered as Google Slides. Ordinary reviews need only the PR descriptions split-pr writes. |
+| `demo-reel` | **Optional.** One annotated walkthrough GIF instead of a deck: an in-page caption bar labels every scene with the requirement it proves, uploaded to Drive and linked at the top of the PR body. The lighter choice when a single clip carries the story. |
 
 ## The flow
 
@@ -55,6 +56,7 @@ one PR (usually)           curated history, read commit by commit
         │
         ▼
 /pr-deck <KEY>             optional: a deck for wider audiences
+   or /demo-reel <KEY>      optional: one labeled walkthrough clip instead
 ```
 
 Each skill also works standalone.
