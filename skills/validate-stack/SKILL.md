@@ -60,6 +60,33 @@ It prints anomalies only and exits non-zero when it found any. A clean run is
 one line — resist the urge to expand it into a checklist of green ticks, or
 people stop reading the output.
 
+### Curated single-PR history — `validate-history.sh`
+
+The plugin's preferred outcome is not a stack but one PR with a curated,
+commit-by-commit-readable history — and that promise fails silently too: the
+equivalence proof guarantees the **end** of a rewrite, not the **path**. One
+mid-history commit that references a symbol the next commit introduces still
+diffs clean at the top, and quietly destroys both the guided reading and
+`git bisect`.
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/skills/validate-stack/scripts/validate-history.sh \
+  --base <what the branch lands on> [--head <ref>] \
+  [--check '<cmd>'] [--equals <pre-rewrite branch>]
+```
+
+- Checks that **every commit in `base..head` builds on its own** (default: the
+  repo's type-check script; pass `--check 'pnpm type-check && pnpm test'` when
+  the tests are cheap enough to pay per commit), that the **marker census is
+  zero at every commit** (published history never carries a placeholder), and
+  `--equals` proves byte-identity with the branch the rewrite replaced.
+- Run it after **every** history re-cut (pacer closeout, split-pr §2) — it is
+  the check that makes "each commit is complete" a verified claim instead of a
+  stated one.
+- It checks out each commit in place (reusing `node_modules`); it needs a
+  clean tracked tree and restores your starting point. If the lockfile changes
+  inside the range, reinstall and re-run before trusting a failure.
+
 ### Known limits — do not report these as failures
 
 - `gh stack view` reads **local branch tracking**, not the PR. A stack created
