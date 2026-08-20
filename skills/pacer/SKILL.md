@@ -88,13 +88,35 @@ to the plan file under `## Pacer Layers` and initialize `## Pacer Progress`.
    Bodies either `throw new Error("TODO(pacer:L<k>)")` or return **realistic
    mock data** — mocks keep outer layers runnable and demoable early.
 3. It must typecheck/compile. Run the check for real.
-4. Give the user a **skeleton tour**: file tree, key signatures, the data
+4. **Pattern pre-check (React/TS repos; parallel subagents).** The skeleton is
+   all signatures and seams — exactly what pattern guidance can judge before
+   any body exists, and the cheapest moment to act on what it finds. Spawn two
+   background subagents in one message while you prepare the tour; never load
+   these skills into the main context (they are long reference documents and
+   the findings are all you need):
+   - one loads the `vercel-composition-patterns` skill (via the Skill tool)
+     and audits the skeleton's component APIs against it — boolean-prop
+     proliferation, missed compound-component or context seams, prop-drilling
+     the layer map will bake in;
+   - one loads the `vercel-react-best-practices` skill and audits the wiring —
+     data-fetching placement, waterfall risks, state placed a layer too high,
+     bundle/memoization hazards visible from the structure alone.
+   Each subagent gets the layer map plus the skeleton diff and returns at most
+   5 prioritized findings (`file:symbol` — what breaks the pattern — the
+   change while it is still a signature edit). Skip this step, and say so,
+   when the repo is not React or the skills are unavailable.
+5. Give the user a **skeleton tour**: file tree, key signatures, the data
    flow in one paragraph — then ask your 1–3 highest-leverage questions
-   (module boundaries, naming, direction of data flow). This is the cheapest
-   moment in the whole task to change architecture; say so explicitly. The tour
-   is the user's review of the architecture — it replaces showing a skeleton to
-   anyone else.
-5. Iterate until the user approves. Commit: `chore(<KEY>): skeleton (pacer L0)`.
+   (module boundaries, naming, direction of data flow). Fold pattern findings
+   you agree with into those questions; they compete for the same ≤3 slots
+   rather than adding a second list. This is the cheapest moment in the whole
+   task to change architecture; say so explicitly. The tour is the user's
+   review of the architecture — it replaces showing a skeleton to anyone else.
+6. Append the surviving pattern findings to the plan under
+   `## Pacer Pattern Watchlist`, each tagged with the layer whose brief must
+   answer it (`L2: RightPanel props — decide compound vs flags`). A finding
+   the user rejects is dropped, not carried.
+7. Iterate until the user approves. Commit: `chore(<KEY>): skeleton (pacer L0)`.
    This commit is scaffolding and will be folded away at closeout; keep it as a
    checkpoint, not as something a reviewer will ever see.
 
@@ -104,7 +126,8 @@ For each layer, in order:
 
 1. **Brief (before writing code)**: restate what the plan says for this
    layer, then — this is the 陪跑 moment — proactively flag anything that now
-   looks questionable given what the previous layers revealed. Max 3 items.
+   looks questionable given what the previous layers revealed, including any
+   `## Pacer Pattern Watchlist` item tagged for this layer. Max 3 items.
    If the user wants to change approach, update the layer map first.
 2. **Implement this layer only.** Replace placeholders tagged for this layer;
    calls into deeper layers remain placeholders. Never implement deeper than
@@ -126,9 +149,30 @@ For each layer, in order:
 1. `grep -rn "TODO(pacer:"` — must be zero, or each remaining marker is
    explicitly listed as deferred with the user's sign-off.
 2. Run the full test suite.
-3. Summarize the Drift Log — this is the honest changelog of where the plan
+3. **Review gate — nothing goes to PR without it.** Run the two reviews
+   against the finished branch, before the history is re-cut, so their fixes
+   land as commits the curation can absorb:
+   - **Correctness review (one background subagent, spawned first).** Hand it
+     the spec, the plan with its Drift Log, and the full branch diff. Its
+     charter is the blind spots, not the style: acceptance criteria that do
+     not actually hold, edge cases the spec never considered (empty/degenerate
+     inputs, races between async flows, lifecycle/unmount timing, interactions
+     with work scoped out to sibling tickets), and Drift Log decisions whose
+     consequences were never re-checked downstream. Every finding must name a
+     concrete failure scenario — inputs/state → wrong outcome — or it does not
+     count.
+   - **fe-review (main context, via the Skill tool)** while the subagent runs.
+     It drives its own toolchain and reviewer panel and ends in a
+     discuss-before-fix conversation, which is why it cannot be delegated to a
+     subagent. Where fe-review is not installed, fall back to `/code-review`.
+   Merge the two findings lists, dedupe, and discuss them with the user in
+   fe-review's discuss-before-fix step. Apply the agreed fixes, re-run
+   typecheck/lint/tests, and record each finding's outcome (fixed / rejected,
+   with why) in the Drift Log. Skipping the gate requires the user's explicit
+   sign-off, recorded the same way.
+4. Summarize the Drift Log — this is the honest changelog of where the plan
    was wrong and what was decided instead.
-4. **Re-cut the history for reading.** The build order was top-down; the
+5. **Re-cut the history for reading.** The build order was top-down; the
    reading order is bottom-up. Hand off to `split-pr` §2: fold the skeleton
    commit into the layers that completed it, drop every fixup, and re-commit so
    each commit is complete, single-purpose, and carries its own tests. Prove
@@ -136,7 +180,7 @@ For each layer, in order:
    before it. Only then decide whether one PR with that history is enough, or
    whether it needs splitting into a small number of complete PRs (`split-pr`
    §3). Never publish the layer commits as-is.
-5. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
+6. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
    handles PR creation and the Jira comment.
 
 ## Rules
@@ -168,8 +212,12 @@ For each layer, in order:
 - current: L2
 - done: L0 (commit abc123), L1 (commit def456)
 
+## Pacer Pattern Watchlist
+- L2: RightPanel props — decide compound vs boolean flags (composition-patterns)
+
 ## Drift Log
 - 2026-08-14 L1: plan assumed X; actually Y — decided Z (user confirmed)
+- 2026-08-15 gate: correctness review found unmount race in useFoo — fixed (commit 789abc)
 ```
 
 (When split-pr wrote a `## Review Plan`, it replaces `## Pacer Layers`;
