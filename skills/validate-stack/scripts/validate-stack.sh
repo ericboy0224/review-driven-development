@@ -86,22 +86,18 @@ else
   warn "membership: gh-stack extension not installed, link state unchecked"
 fi
 
-# ── 3. Sizes ─────────────────────────────────────────────────────────────────
-over_ideal=0; max_lines=0
+# ── 3. Sizes — information only, never a failure ─────────────────────────────
+# Readability decides boundaries; line count is a symptom (see SKILL.md and the
+# README field notes — the old <100/400 bands are retired).
+sizes=""
 for ((i = 0; i < COUNT; i++)); do
   base="origin/${BASES[$i]}"; head="origin/${HEADS[$i]}"
   git rev-parse -q --verify "$base" >/dev/null || continue
   git rev-parse -q --verify "$head" >/dev/null || continue
   n=$(git diff --numstat "$base...$head" | awk '{a+=$1; d+=$2} END {print a+d+0}')
-  [[ "$n" -gt "$max_lines" ]] && max_lines=$n
-  if [[ "$n" -gt 400 ]]; then
-    fail "size: #${NUMS[$i]} changes $n lines (ceiling 400)"
-  elif [[ "$n" -gt 100 ]]; then
-    over_ideal=$((over_ideal + 1))
-  fi
+  sizes="$sizes #${NUMS[$i]}:$n"
 done
-[[ "$over_ideal" -gt 0 ]] && \
-  note "size: $over_ideal rung(s) over the <100 ideal, all under the ceiling (max $max_lines)"
+[[ -n "$sizes" ]] && note "sizes (lines):$sizes"
 
 # ── 4. Marker census ─────────────────────────────────────────────────────────
 if [[ -n "$MARKER" ]]; then
