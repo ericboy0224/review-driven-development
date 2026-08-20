@@ -1,6 +1,6 @@
 {
   "name": "review-driven-development",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Review-driven development: write every commit as a Conventional Commit (conventional-commits), make a large change readable by curating its history into a bottom-up narrative (split-pr), pair-run the implementation layer by layer (pacer), validate a multi-PR stack structurally (validate-stack), manage the PR chain (stacked-prs), and hand wider audiences a guided-reading deck (pr-deck). Never publishes placeholders a later PR removes.",
   "author": {
     "name": "Eric Lin",
