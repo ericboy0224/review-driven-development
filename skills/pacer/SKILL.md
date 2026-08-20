@@ -44,6 +44,9 @@ Arguments: `[ticket-key | plan-path]`
 3. **Resume check**: if the plan contains a `## Pacer Progress` section,
    report where the last session stopped (current layer, done layers, open
    drift items) and continue from there — do not re-layer.
+4. Read `~/.claude/plan-lessons.md` if it exists — past tickets' distilled
+   planning failures. Any lesson that touches this plan is raised during
+   layering (§1), where it is still a map change instead of a drift entry.
 
 ## 1. Layering — re-slice the plan by depth, not by plan order
 
@@ -180,8 +183,33 @@ For each layer, in order:
    before it. Only then decide whether one PR with that history is enough, or
    whether it needs splitting into a small number of complete PRs (`split-pr`
    §3). Never publish the layer commits as-is.
-6. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
-   handles PR creation and the Jira comment.
+6. **Prove the re-cut, path included.** Run
+   `${CLAUDE_PLUGIN_ROOT}/skills/validate-stack/scripts/validate-history.sh
+   --base <trunk> --equals <pre-rewrite branch>`: every commit must build on
+   its own and carry zero markers, and the head must be byte-identical to the
+   branch before the rewrite. The equivalence diff alone proves the end state;
+   this proves the path a reviewer will actually read. A failure here is fixed
+   by re-cutting, never by a fixup commit on top.
+7. **Author the PR description** — do not leave it to whatever creates the PR.
+   Write it to `docs/plans/<KEY>/pr-body.md` following split-pr §5: the goal in
+   the user's terms, the reading route (commit list, one line each), and the
+   2–3 decisions this PR asks the reviewer to judge. Two inputs are already on
+   hand and go in verbatim rather than being re-derived: the review gate's
+   findings and their outcomes (fixed / rejected + why) become the risk note,
+   and the gate's re-run of typecheck/lint/tests plus step 6's per-commit proof
+   are the verification claims — state exactly what ran, nothing more.
+8. **Feed the ledger.** Distill the Drift Log into at most 1–3 *generalizable*
+   planning lessons — the kind the next ticket's plan-writer could have used
+   ("plans assume a staging branch exists; this epic stacks on a feature
+   branch"), never ticket detail. Update `~/.claude/plan-lessons.md` by its own
+   protocol (stated in the file header): merge into an existing entry and bump
+   its `×N` count when the lesson already exists, append only when genuinely
+   new, and evict lowest-count/oldest beyond the 30-entry cap. A drift that
+   teaches nothing beyond this ticket adds no entry — the ledger stays useful
+   by staying small.
+9. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
+   handles PR creation and the Jira comment — with `pr-body.md` from step 7 as
+   the PR body, not a regenerated one.
 
 ## Rules
 
