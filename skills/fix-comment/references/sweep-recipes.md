@@ -122,6 +122,21 @@ whole instead of field by field (`map.set(key, {...})` rather than four
 assignments), then split the type into a union. Under immer, field assignment
 across variants is a compile error, which is the point.
 
+**After the union lands**, prove that no compensating guard survived it. This
+needs no change to the repo's config:
+
+```bash
+npx eslint --rule '{"@typescript-eslint/no-unnecessary-condition":"error"}' $FILES
+```
+
+It reports every `?.` and every condition the type says can only go one way —
+`Unnecessary optional chain on a non-nullish value`. Two limits, both measured:
+the project must already set `parserOptions.project`, or the rule has no type
+information to work from; and the rule **cannot find the loose type itself**.
+Before the union, `fill?.style` against `fill: Fill | null` is legitimate as far
+as the type knows, and the rule stays silent — it verifies the cleanup, it does
+not detect the class. The detector is the reviewer, or the plan.
+
 This class belongs to the plan stage. When it appears, `blueprint`'s state-shape
 audit is where it costs one sentence instead of a type reshape — record it in
 `~/.claude/plan-lessons.md`.
