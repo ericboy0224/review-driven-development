@@ -57,7 +57,37 @@ language, so a reader moves between them without translating.
 - [ ] State mutations follow one consistent pattern per state type — no
       plan step that updates the same data two different ways.
 
-## 3. Interaction logic
+## 3. State shape (can the type say something false?)
+
+A type that lists fields describes storage. A type that lists states describes
+the thing. When the plan writes the first for something that is the second, the
+compiler stops being able to help, and every reader pays in null checks.
+
+- [ ] For each piece of state, the plan says how many **distinct states** it
+      passes through in its life, and which fields exist in each one.
+- [ ] A field that exists in some states only is modelled as a member of a
+      **discriminated union**, not as a nullable field beside a `status`,
+      `phase`, `kind` or `step` field. Those two facts moving independently is
+      the signature of this defect: `{ status: 'ready', fill: null }` type-checks
+      while being a state that must never exist.
+- [ ] No invariant in the plan is written as prose that only one function keeps
+      ("a settled source always has a fill"). Either the type carries it, or the
+      plan names the one function that does and every reader that trusts it.
+- [ ] A plan step that introduces a status field with dependent fields carries
+      the union in the plan text, before the code exists. The same change costs
+      one sentence here and a review round plus a type reshape later.
+
+The four marks this defect leaves in a diff, useful when auditing existing code
+rather than a plan — each one is a symptom, not the cause:
+
+| Mark | What it is compensating for |
+| --- | --- |
+| `?.` on a field inside a branch that already excludes the empty case | the type does not know the branch narrowed anything |
+| `NonNullable<>` or an intersection type re-tightening a field | one kind of value needed its own type all along |
+| A hand-written `is` predicate over a discriminant | the discriminant would narrow on its own in a union |
+| `as SomeType` in a fixture | the fixture cannot be built from the real type, because the real type is looser than reality |
+
+## 4. Interaction logic
 
 - [ ] State changes are owned by named event handlers, not effects reacting
       to renders. An effect the plan keeps must carry its justification.
@@ -67,14 +97,14 @@ language, so a reader moves between them without translating.
 - [ ] Async flows plan their loading and error states up front, not as a
       follow-up.
 
-## 4. Infrastructure
+## 5. Infrastructure
 
 - [ ] API access goes through the repo's existing clients and wrappers; the
       plan creates no parallel client for an endpoint family that has one.
 - [ ] Errors cross the infrastructure boundary typed and specific — no plan
       step that swallows an error or generalizes it into a vague message.
 
-## 5. Testability (the design smell detector)
+## 6. Testability (the design smell detector)
 
 - [ ] The plan's business logic is stated so it could be tested as pure
       functions — inputs and outputs, no rendering required. If a rule can

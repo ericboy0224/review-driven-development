@@ -94,6 +94,38 @@ the PR adds and check each one against the design source. If the design defines
 one message and the code has three, the extra two are the defect — not the
 copy's wording.
 
+## The type can say something false
+
+**Comment shape:** "考慮改 type 嗎？like `{ status: 'a' } | { status: 'b'; … }`",
+"這裡不用判斷吧", a branch that narrows nothing
+
+```bash
+grep -nE "status:|phase:|kind:|step:" $FILES                    # the discriminant
+grep -nE "\?\.\w+|NonNullable<|as [A-Z]\w+|is [A-Z]\w+ =>" $FILES   # its four compensations
+```
+
+A `status` field beside fields that are nullable only in some of those states
+lets the type describe a state that must never exist — `{ status: 'ready', fill:
+null }` type-checks. The reviewer usually flags one of the four marks below;
+sweep for the other three in the same pass, because they all compensate for the
+same missing union:
+
+| Mark | Compensating for |
+| --- | --- |
+| `?.` inside a branch that already excludes the empty case | the branch narrowed nothing |
+| `NonNullable<>` or an intersection re-tightening a field | one kind of value needed its own type |
+| A hand-written `is` predicate over a discriminant | a union would narrow on its own |
+| `as SomeType` in a test fixture | the real type is looser than reality |
+
+The fix has two steps, and the first one is separately readable: write the state
+whole instead of field by field (`map.set(key, {...})` rather than four
+assignments), then split the type into a union. Under immer, field assignment
+across variants is a compile error, which is the point.
+
+This class belongs to the plan stage. When it appears, `blueprint`'s state-shape
+audit is where it costs one sentence instead of a type reshape — record it in
+`~/.claude/plan-lessons.md`.
+
 ## Names that describe the wrong thing
 
 **Comment shape:** "確認一下，X 和 Y 是一樣的嗎？"

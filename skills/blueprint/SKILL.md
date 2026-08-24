@@ -1,6 +1,6 @@
 ---
 name: blueprint
-description: Optimize a finished plan before any code exists — audit the planned client-side architecture (layer separation, state placement, component composition) with the vercel-composition-patterns and vercel-react-best-practices skills, rewrite proposed names and plan prose with simple-english, refuse every change outside the ticket's scope, then publish a visual artifact (component composition + data flow, in English) the user can actually read. Use after plan.md is complete and before /sprint — "optimize the plan", "review the plan architecture", "visualize the plan", "/blueprint CR-123".
+description: Optimize a finished plan before any code exists — audit the planned client-side architecture (layer separation, state placement, state shape, component composition) with the vercel-composition-patterns and vercel-react-best-practices skills, rewrite proposed names and plan prose with simple-english, refuse every change outside the ticket's scope, then publish a visual artifact (component composition + data flow, in English) the user can actually read. Use after plan.md is complete and before /sprint — "optimize the plan", "review the plan architecture", "visualize the plan", "/blueprint CR-123".
 ---
 
 # Blueprint — plan-stage architecture and readability pass
@@ -39,7 +39,7 @@ Arguments: `[ticket-key | plan-path]`
 
 ## 1. Architecture audit (parallel subagents)
 
-Spawn three background subagents in one message; never load the pattern
+Spawn four background subagents in one message; never load the pattern
 skills into the main context (they are long reference documents and the
 findings are all you need). Each subagent gets the spec, the plan, the scope
 wall from §0, and read access to the repo; each returns at most 5 prioritized
@@ -62,9 +62,17 @@ out-of-scope code is discarded, not reported.
   is every piece of state typed (local / remote / shared) and homed
   accordingly, do presentational components stay free of business and
   fetching logic.
+- **State shape** — reads §3 of the same reference and asks one question of
+  every piece of state the plan introduces: can the proposed type represent a
+  combination that must never exist? A `status` (or `phase`, `kind`, `step`)
+  field beside fields that are nullable only in some of those states is the
+  signature, and the finding is the discriminated union that replaces it,
+  written into the plan text. This audit is the cheapest one in the skill: the
+  same change is one sentence here, and a type reshape plus a review round
+  once the code exists.
 
 Skip the two Vercel audits, and say so, when the repo is not React or the
-skills are unavailable; the layering audit always runs.
+skills are unavailable; the layering and state-shape audits always run.
 
 ## 2. Naming and readability pass
 
