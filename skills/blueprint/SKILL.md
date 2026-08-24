@@ -39,7 +39,7 @@ Arguments: `[ticket-key | plan-path]`
 
 ## 1. Architecture audit (parallel subagents)
 
-Spawn four background subagents in one message; never load the pattern
+Spawn five background subagents in one message; never load the pattern
 skills into the main context (they are long reference documents and the
 findings are all you need). Each subagent gets the spec, the plan, the scope
 wall from §0, and read access to the repo; each returns at most 5 prioritized
@@ -70,9 +70,22 @@ out-of-scope code is discarded, not reported.
   written into the plan text. This audit is the cheapest one in the skill: the
   same change is one sentence here, and a type reshape plus a review round
   once the code exists.
+- **Component inventory** — audits what the plan proposes to *build* against
+  what the repo and its design system already ship. For every new UI element
+  in the plan, the finding is the component it should reuse instead, in this
+  order: a wrapper in the repo's shared component directory, then the design
+  system's own component, then a new file. Enumerate both inventories for real
+  instead of from memory — list the design system package's component
+  directory and the repo's shared component directory — because the miss is
+  always the component nobody knew was there, and a hand-rolled copy of an
+  existing wrapper reads as a deliberate choice to every later reviewer. Judge
+  the plan's colors and spacing the same way: when the theme exposes a design
+  system namespace beside MUI-compat aliases that resolve to the same value,
+  the plan must name which vocabulary it writes, or one file ends up with both.
 
 Skip the two Vercel audits, and say so, when the repo is not React or the
-skills are unavailable; the layering and state-shape audits always run.
+skills are unavailable. Skip the component inventory when the plan proposes no
+UI. The layering and state-shape audits always run.
 
 ## 2. Naming and readability pass
 
