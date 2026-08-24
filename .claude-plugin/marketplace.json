@@ -8,7 +8,7 @@
     {
       "name": "review-driven-development",
       "source": "./",
-      "description": "Write every commit as a Conventional Commit, curate a large change's history into a readable narrative (split-pr), pair-run the implementation (pacer), and split into complete PRs only when one is still too much to hold."
+      "description": "Write every commit as a Conventional Commit, review the plan before any code exists (blueprint), execute it with parallel subagent waves (sprint), curate a large change's history into a readable narrative (split-pr), and split into complete PRs only when one is still too much to hold."
     }
   ]
 }

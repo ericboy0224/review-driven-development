@@ -43,8 +43,9 @@ ${CLAUDE_PLUGIN_ROOT}/skills/validate-stack/scripts/validate-stack.sh \
 - **`--full`** adds a per-rung typecheck (each rung checked out and built on
   its own). Budget ~15s per rung; skip it when only PR text changed, always
   run it after a rebase.
-- **`--marker-prefix`** defaults to `TODO(pacer:`. Pass the project's own
-  marker if it differs.
+- **`--marker-prefix`** defaults to `TODO(pacer:`, the retired pacer skill's
+  scaffolding marker (sprint bans placeholders outright, so any hit is a
+  defect). Pass the project's own marker if it differs.
 
 What it checks: base chain continuity, stack membership, the marker census,
 PR bodies linking closed PRs, equivalence, per-rung build.
@@ -80,7 +81,7 @@ ${CLAUDE_PLUGIN_ROOT}/skills/validate-stack/scripts/validate-history.sh \
   the tests are cheap enough to pay per commit), that the **marker census is
   zero at every commit** (published history never carries a placeholder), and
   `--equals` proves byte-identity with the branch the rewrite replaced.
-- Run it after **every** history re-cut (pacer closeout, split-pr §2) — it is
+- Run it after **every** history re-cut (sprint closeout, split-pr §2) — it is
   the check that makes "each commit is complete" a verified claim instead of a
   stated one.
 - It checks out each commit in place (reusing `node_modules`); it needs a

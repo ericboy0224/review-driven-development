@@ -26,8 +26,9 @@ Line count is a symptom, never a target.
 | Skill | Role |
 | --- | --- |
 | `conventional-commits` | The message format every commit in this flow uses: `<type>(<scope>): <description>`, the type-choice ambiguities resolved, and when a message needing an "and" means the commit should be split. Loaded automatically whenever a commit message is being written. |
+| `blueprint` | **Optional.** Optimize a finished plan before any code exists: audit the planned client-side architecture (layer separation, state placement, composition — with the vercel-composition-patterns / vercel-react-best-practices skills), rewrite proposed names and plan prose with simple-english, discard everything outside the ticket's scope, and publish a visual artifact organized by the client-side architecture layers (layer map, composition, data flow — in English). Writes `## Blueprint Notes`, which binds sprint's subagents and is verified at sprint's integration step. |
 | `split-pr` | Make a large change readable. Discuss the component architecture from the business goal down, then curate the commit history into a bottom-up narrative — and only if that is not enough, cut it into a small number of complete, self-contained PRs. Produces a `## Review Plan`. |
-| `pacer` | Pair-run (陪跑) the implementation — skeleton first, placeholders down, one layer at a time, with a hard discussion checkpoint at every boundary. Skeleton-first is how the work is *built*; the placeholders are folded away before anything is published. |
+| `sprint` | Execute a finished plan to completion as fast as possible, subagent-driven: decompose into file-disjoint work units, dispatch parallel implementer subagents in dependency-ordered waves, verify every wave, then run the review gate and closeout deliverables. One hard stop, at closeout — the human review lives in `blueprint` (before) and the closeout conversation (after), not in mid-flight checkpoints. Replaced `pacer` (retired 2026-08-24). |
 | `validate-stack` | The mechanical sweep over a multi-PR stack: base chain, membership, per-rung build, equivalence with the branch it replaced, and table drift across PR bodies. Also flags any placeholder that reached a PR, and whether the stack is earning its coordination cost. Ships `validate-history.sh` for the single-PR case: after a history re-cut, proves every commit builds on its own and carries no markers — the path, not just the end state. |
 | `stacked-prs` | The `gh stack` mechanics: create, link, rebase, repair, and merge a chain of PRs. |
 | `pr-deck` | **Optional.** For audiences wider than the reviewers (QA, PM, a demo), a guided-reading deck delivered as Google Slides. Ordinary reviews need only the PR descriptions split-pr writes. |
@@ -39,11 +40,12 @@ Line count is a symptom, never a target.
 spec.md + plan.md          (however you produce them)
         │
         ▼
-/split-pr <KEY>            architecture discussion → ## Review Plan in plan.md
-        │
+/blueprint <KEY>           plan-stage architecture + naming audit,
+        │                  scope-walled, ending in a visual artifact —
+        │                  this is where the user reviews the design
         ▼
-/pacer <KEY>               implement layer by layer on one branch,
-        │                  checkpointing at every boundary
+/sprint <KEY>              subagent-driven implementation in parallel waves,
+        │                  review gate at the end, one hard stop at closeout
         ▼
 re-cut the history         bottom-up, complete commits, placeholders folded
         │                  away, equivalence proved

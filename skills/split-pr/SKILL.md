@@ -41,10 +41,9 @@ This is not a style preference. It is what makes review possible:
   what the ladder intends, so it reports the scaffolding as findings, and the
   human ends up doing the pass manually anyway.
 
-Skeleton-first is a fine way to *build* (see `pacer`) — write the contracts,
-then fill them layer by layer, discussing at each boundary. It is not a way to
-*publish*. When the work is ready to go out, the skeleton commit is folded into
-the layer that completes it.
+Skeleton-first is a fine way to *build* — write the contracts, then fill
+them in. It is not a way to *publish*. When the work is ready to go out, any
+skeleton or checkpoint commit is folded into the commit that completes it.
 
 ## Decision order
 
