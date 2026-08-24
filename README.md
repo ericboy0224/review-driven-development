@@ -29,6 +29,7 @@ Line count is a symptom, never a target.
 | `blueprint` | **Optional.** Optimize a finished plan before any code exists: audit the planned client-side architecture (layer separation, state placement, composition — with the vercel-composition-patterns / vercel-react-best-practices skills), rewrite proposed names and plan prose with simple-english, discard everything outside the ticket's scope, and publish a visual artifact organized by the client-side architecture layers (layer map, composition, data flow — in English). Writes `## Blueprint Notes`, which binds sprint's subagents and is verified at sprint's integration step. |
 | `split-pr` | Make a large change readable. Discuss the component architecture from the business goal down, then curate the commit history into a bottom-up narrative — and only if that is not enough, cut it into a small number of complete, self-contained PRs. Produces a `## Review Plan`. |
 | `sprint` | Execute a finished plan to completion as fast as possible, subagent-driven: decompose into file-disjoint work units, dispatch parallel implementer subagents in dependency-ordered waves, verify every wave, then run the review gate and closeout deliverables. One hard stop, at closeout — the human review lives in `blueprint` (before) and the closeout conversation (after), not in mid-flight checkpoints. Replaced `pacer` (retired 2026-08-24). |
+| `fix-comment` | Work through a PR's review comments: read what each one claims, check its premise against the design before touching anything, fix it, then sweep the whole PR for the same class so the reviewer never writes that comment twice — and reply in one Simple English sentence naming the commit. Routes naming to simple-english, architecture to vercel-composition-patterns, performance to vercel-react-best-practices. Never resolves a thread. |
 | `validate-stack` | The mechanical sweep over a multi-PR stack: base chain, membership, per-rung build, equivalence with the branch it replaced, and table drift across PR bodies. Also flags any placeholder that reached a PR, and whether the stack is earning its coordination cost. Ships `validate-history.sh` for the single-PR case: after a history re-cut, proves every commit builds on its own and carries no markers — the path, not just the end state. |
 | `stacked-prs` | The `gh stack` mechanics: create, link, rebase, repair, and merge a chain of PRs. |
 | `pr-deck` | **Optional.** For audiences wider than the reviewers (QA, PM, a demo), a guided-reading deck delivered as Google Slides. Ordinary reviews need only the PR descriptions split-pr writes. |
@@ -59,6 +60,10 @@ one PR (usually)           curated history, read commit by commit
         ▼
 /pr-deck <KEY>             optional: a deck for wider audiences
    or /demo-reel <KEY>      optional: one labeled walkthrough clip instead
+        │
+        ▼
+/fix-comment <PR>          review lands: fix each comment, sweep the PR for
+                           the same class, reply in one sentence, never resolve
 ```
 
 Each skill also works standalone.
