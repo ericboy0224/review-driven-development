@@ -79,6 +79,26 @@ agent that skips this step invents work the design never asked for.
 If the premise fails, reply with the fact instead of a fix. A thread that ends
 in a correct explanation is finished work.
 
+### "Unreachable by construction" is a fix, not a refusal
+
+The most tempting wrong answer is the one that is *true*: the reviewer flagged
+a case the callers cannot currently produce, so nothing needs to change. The
+argument holds and the refusal still fails, because the fact it rests on —
+the accept list two modules upstream, the filter the other branch applies —
+**is not visible at the line the reviewer read**. The next reader arrives with
+exactly the reviewer's information and asks the same question, and the caller
+that eventually can produce the case arrives with no warning at all.
+
+So when the reason for not fixing is a fact outside the flagged line, the fix
+is to bring the fact to the line: a `throw` on the input that "cannot happen",
+a type that makes it unrepresentable, a guard at the boundary that documents
+itself. Say so in the reply — the reviewer was right that the code does not
+say this.
+
+Two reviewers raising the same point independently settles it on its own. A
+premise invisible to two readers is invisible, and the second flag converts
+any standing refusal into a fix without further argument.
+
 ## 3. Sweep the class (the step that earns this skill)
 
 For every accepted comment, search the PR's own diff — not the whole repo — for
