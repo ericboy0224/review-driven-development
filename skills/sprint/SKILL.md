@@ -100,20 +100,46 @@ and any deviation from the plan with its reason.
 
 ## 3. Review gate — nothing goes to PR without it
 
-Run both reviews against the finished branch, before the history is re-cut,
-so fixes land as commits the curation can absorb:
+Run these reviews against the finished branch, before the history is re-cut,
+so fixes land as commits the curation can absorb. Every finding, from any of
+them, must name a concrete failure scenario — inputs/state → wrong outcome —
+or it does not count.
 
-- **Correctness review (one background subagent, spawned first).** Hand it
-  the spec, the plan with its Drift Log, and the full branch diff. Its
-  charter is the blind spots: acceptance criteria that do not actually hold,
-  edge cases the spec never considered (empty/degenerate inputs, races
-  between async flows, lifecycle/unmount timing, interactions with work
-  scoped out to sibling tickets), and `(auto)` drift decisions whose
-  consequences were never re-checked downstream. Every finding must name a
-  concrete failure scenario — inputs/state → wrong outcome — or it does not
-  count.
-- **fe-review (main context, via the Skill tool)** while the subagent runs.
+- **Lifecycle audit (one background subagent, spawned first).** Async
+  lifetime is where the defects that reach production live, and they are
+  found by enumeration, not by reading a diff for suspicious code. Hand it
+  the branch diff, have it build one list per row below, then walk each list
+  and answer the question:
+
+  | Enumerate | Ask of each |
+  | --- | --- |
+  | every `AbortSignal`, and every place a controller is minted | who else is still using the signal this abort reaches? |
+  | every effect whose work depends on a ref or a conditionally rendered node | does that node exist on the run this effect actually gets? |
+  | every retry, re-entry, and second invocation of a handler | what does the second run overwrite that the first is still awaiting? |
+  | every module-level object, array, or map a function returns | can a caller mutate it, and does the next caller inherit that? |
+  | every `Promise.all` / `race` / fan-out | what happens to a member that settles after its owner is gone? |
+  | every reduce, sort, or pick over a collection | what does it return when the collection is empty, and when every member is degenerate? |
+
+- **Correctness review (a second background subagent, in parallel).** The
+  spec, the plan with its Drift Log, and the branch diff. Its charter is the
+  rest of the blind spots: acceptance criteria that do not actually hold,
+  edge cases the spec never considered, interactions with work scoped out to
+  sibling tickets, `(auto)` drift decisions whose consequences were never
+  re-checked downstream, and a sweep of the failure-visibility clause — list
+  every `catch`, `??`, `||`, and default in the diff, and say for each what
+  the user sees when it fires.
+
+- **fe-review (main context, via the Skill tool)** while the subagents run.
   Where fe-review is not installed, fall back to `/code-review`.
+
+- **Exercise the feature in the running app**, via the `run` skill, along the
+  route a reviewer would take. A diff cannot show a design-system component
+  behaving unlike its own documentation, a control that renders but cannot be
+  reached, or a popover that takes focus from the dialog around it — and
+  those are the defects that survive to a reviewer, because the author had
+  the feature open the whole time and never arrived at it cold. If the flow
+  cannot be reached from the app's entry point at all, that is itself the
+  finding: it triggers the demo obligation in §4.
 
 Apply the fixes that are unambiguous, re-running verify after. Findings that
 are judgment calls go to the closeout conversation.
