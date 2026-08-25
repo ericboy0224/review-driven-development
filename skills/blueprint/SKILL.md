@@ -39,7 +39,7 @@ Arguments: `[ticket-key | plan-path]`
 
 ## 1. Architecture audit (parallel subagents)
 
-Spawn five background subagents in one message; never load the pattern
+Spawn six background subagents in one message; never load the pattern
 skills into the main context (they are long reference documents and the
 findings are all you need). Each subagent gets the spec, the plan, the scope
 wall from §0, and read access to the repo; each returns at most 5 prioritized
@@ -70,22 +70,51 @@ out-of-scope code is discarded, not reported.
   written into the plan text. This audit is the cheapest one in the skill: the
   same change is one sentence here, and a type reshape plus a review round
   once the code exists.
-- **Component inventory** — audits what the plan proposes to *build* against
-  what the repo and its design system already ship. For every new UI element
-  in the plan, the finding is the component it should reuse instead, in this
-  order: a wrapper in the repo's shared component directory, then the design
-  system's own component, then a new file. Enumerate both inventories for real
-  instead of from memory — list the design system package's component
-  directory and the repo's shared component directory — because the miss is
-  always the component nobody knew was there, and a hand-rolled copy of an
-  existing wrapper reads as a deliberate choice to every later reviewer. Judge
-  the plan's colors and spacing the same way: when the theme exposes a design
-  system namespace beside MUI-compat aliases that resolve to the same value,
-  the plan must name which vocabulary it writes, or one file ends up with both.
+- **Prior art** — audits what the plan proposes to *build* against what the
+  repo, its workspace, its dependencies, its design system and the language
+  itself already ship. Take every new file, type, helper, constant and UI
+  element in the plan, and for each one search these registries in order:
+
+  1. the repo's own utility, type and constant directories (`src/utils`,
+     `src/typings`, `src/constants` or whatever this repo calls them);
+  2. the workspace's shared packages — the exports of every `libs/*` or
+     equivalent the repo already depends on;
+  3. `package.json` — a dependency already installed for something else;
+  4. the design system's component directory, then the repo's own shared
+     component directory;
+  5. the platform — for anything the plan describes as grouping, waiting,
+     decoding, aborting, comparing or aggregating, name the built-in that
+     does it before writing one.
+
+  **Enumerate each registry for real, never from memory**, and report per
+  proposal which registries were searched and what the nearest existing thing
+  is. A proposal with no match says so explicitly — absence is an assertion
+  here, not the default. The miss is always the helper nobody knew was there,
+  and a hand-rolled copy of one reads as a deliberate choice to every later
+  reviewer. Judge the plan's colors and spacing the same way: when the theme
+  exposes a design system namespace beside MUI-compat aliases that resolve to
+  the same value, the plan must name which vocabulary it writes, or one file
+  ends up with both.
+
+- **Subtraction** — audits the structure the plan proposes to *add*, which no
+  other auditor is charged with. Take every wrapper, hook, context layer,
+  extracted constant, barrel, indirection and boundary-enforcing test in the
+  plan, and ask one question of each: **what breaks if this is deleted?** The
+  answer must name a concrete consequence — a caller that would re-render, a
+  type that would stop being checked, a duplication that would return. No such
+  answer means the finding is "delete it, inline the thing it wraps".
+
+  The pattern skills cannot do this: both are built to find *missing*
+  structure, so a plan can pass composition and React-practice audits while
+  carrying a memoized wrapper around an already-stable identity, a hook that a
+  CSS line replaces, or a constant with exactly one reader. Prefer the simpler
+  shape whenever the difference is small — the burden of proof sits on the
+  layer, not on removing it.
 
 Skip the two Vercel audits, and say so, when the repo is not React or the
-skills are unavailable. Skip the component inventory when the plan proposes no
-UI. The layering and state-shape audits always run.
+skills are unavailable. The layering, state-shape, prior-art and subtraction
+audits always run — prior art searches fewer registries when the plan proposes
+no UI, but it still runs.
 
 ## 2. Naming and readability pass
 
