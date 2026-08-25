@@ -67,6 +67,15 @@ they run concurrently. Each subagent gets:
   loading and error states, tests where the repo tests that layer. No
   placeholder bodies, no `TODO` markers, no mock returns. A subagent that
   cannot finish its unit reports *why* instead of stubbing over it.
+- the **failure-visibility clause**, which the contract above does not
+  imply: every `catch`, every fallback and every default that stands in for
+  a failure must name what failed and say where that name is read. A default
+  is only allowed to replace a failure when it either sets state the UI can
+  show, or throws. An empty `catch`, a `?? ''`, a fallback that leaves the
+  "it worked" flag set — each of those satisfies "handles errors" while
+  making the failure unobservable, which is worse than the crash it replaced,
+  because the crash was at least reported. When a unit degrades on purpose,
+  the reason travels with the degraded value, not in a comment.
 
 Each subagent runs the unit's own verify (typecheck scoped to its files,
 its tests) before returning, and reports: files touched, decisions made,
