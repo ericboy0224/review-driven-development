@@ -36,6 +36,28 @@ Arguments: `[ticket-key | plan-path]`
    list gates every later step: a finding, rename, or "improvement" that
    lands outside the wall is discarded before the user ever sees it — this
    skill optimizes the plan, never the codebase around it.
+4. **List the outside facts.** Every audit in this skill is closed-world: it
+   reads the plan and the repo. The costliest plan defects are not in either
+   — they are facts about somebody else's system that the plan assumed and
+   nobody checked. A client written against a service that was retired last
+   quarter, a migration designed for legacy rows that never existed, a
+   library prop whose documentation and implementation disagree, a design
+   the plan describes from memory.
+
+   So write down, in the plan, every fact the work depends on that does not
+   live in this repo:
+
+   | What is assumed | Whose system | How it was checked |
+   | --- | --- | --- |
+   | `POST /folders` accepts an entry with no file body | media-center | **unchecked** |
+   | the advisor answers `crop` as normalized 0–1 | creative-advisor | FastAPI `/docs`, 2026-08-11 |
+   | `Tabs` renders scroll arrows without `variant="contained"` | design system | read `node_modules`, `useTabScroll` |
+
+   Check what is cheap to check — read the dependency's source in
+   `node_modules` rather than its docs, open the endpoint's schema, follow
+   the design link. Anything still **unchecked** is carried into §3 as a
+   question for the user, never silently assumed: the answer usually costs
+   one message to a teammate now, and a re-implementation later.
 
 ## 1. Architecture audit (parallel subagents)
 
@@ -163,10 +185,12 @@ in §3, never silently before the user has agreed.
 
 ## 3. Discuss, then apply
 
-1. Merge the audit findings, the naming table, and any applicable
-   plan-lessons into one list. Present it and ask **at most 3 questions**,
-   highest-leverage only: a laundry list recreates the document-review pain
-   this plugin exists to remove.
+1. Merge the audit findings, the naming table, the unchecked outside facts
+   from §0.4, and any applicable plan-lessons into one list. Present it and
+   ask **at most 3 questions**, highest-leverage only: a laundry list
+   recreates the document-review pain this plugin exists to remove. An
+   unchecked fact that the whole plan rests on outranks any style finding
+   for one of those three slots.
 2. The user decides per item. Apply the agreed edits to `plan.md` directly —
    the plan file is the single source of truth and it converges toward the
    agreed shape, exactly as it does under sprint's Drift Log.
@@ -207,7 +231,11 @@ it is an audit finding that belongs back in §1.
      the point.
    - **State placement table** — each piece of state: its type
      (local / remote / shared), its home layer and module, and why that home.
-   - **Naming decisions** — the accepted naming table from §2.
+   - **Naming decisions** — the glossary and the accepted naming table
+     from §2.
+   - **Outside facts** — the §0.4 table, with anything still unchecked
+     marked as such. A reviewer of the plan is the last person who can
+     cheaply say "that endpoint moved".
    - **Scope wall** — what is in, what is explicitly out.
    - **Open questions** — anything the user deferred in §3.
 3. Re-running blueprint on the same ticket republishes to the same artifact
