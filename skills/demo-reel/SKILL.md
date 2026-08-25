@@ -1,6 +1,6 @@
 ---
 name: demo-reel
-description: Record one annotated walkthrough GIF of a feature — an in-page caption bar labels every scene with the requirement it demonstrates ([Loading], [Hover], [Warning], …), captured by exercising the running app with claude-in-chrome, delivered to Drive under RDD-Demo/<KEY>/ and linked from the PR. The lightweight alternative to pr-deck when one artifact can carry the whole story. Use when the user wants demo material — "錄 demo", "製作 demo 素材", "框出、解釋對應的需求", "annotated walkthrough", "不用 deck,用一段影片說明" — or when a pr-deck feels like too much ceremony for a single PR.
+description: Record one annotated walkthrough GIF of a feature — an in-page caption bar labels every scene with the requirement it demonstrates ([Loading], [Hover], [Warning], …), captured by exercising the running app with claude-in-chrome, delivered to Drive under RDD-Demo/<KEY>/ and linked from the PR. Mandatory when a reviewer cannot reach the feature in three steps from the app's entry point; the lightweight alternative to pr-deck otherwise. Use when the user wants demo material — "錄 demo", "製作 demo 素材", "框出、解釋對應的需求", "annotated walkthrough", "不用 deck,用一段影片說明" — when sprint's closeout triggers the demo obligation, or when a pr-deck feels like too much ceremony for a single PR.
 ---
 
 # demo-reel — one annotated walkthrough instead of a deck
@@ -10,6 +10,15 @@ What they need is proof: the feature moving, with each moment labeled by the
 requirement it fulfills. This skill produces exactly one artifact — a GIF (or
 short video) where a caption bar names every scene — so a reviewer, QA or PM
 watches 30 seconds and knows what was built and why.
+
+**The reviewer is the first audience, not the wider one.** When the change
+sits behind a flow they cannot reach — a dialog that opens only after an
+upload lands, a state that needs backend data they cannot produce — the clip
+is the only way they see the feature at all, and without it they review the
+diff and miss everything that is only visible on screen. `sprint` §4 makes
+this call by counting steps from the app's entry point; more than three, or
+any step needing data the reviewer cannot make, and this skill is not
+optional. QA and PM are a bonus audience for the same artifact.
 
 Reach for pr-deck instead when the audience must navigate a *stack* (rung
 map, review order, per-rung questions). Reach for demo-reel when one clip
