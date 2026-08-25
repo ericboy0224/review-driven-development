@@ -119,15 +119,41 @@ no UI, but it still runs.
 ## 2. Naming and readability pass
 
 Load the `simple-english:simple-english` skill (ASD-STE100 Simplified
-Technical English) and apply it to two targets:
+Technical English) and apply it to three targets:
 
-1. **Identifiers the plan proposes** — new files, components, hooks, props,
-   functions. One word, one meaning: no synonym pairs (`fetch`/`load`/`get`
-   for the same act), no name whose meaning needs the plan to decode, no
-   abbreviation the repo does not already use. Names that already exist in
-   the repo are renamed only if the plan already renames them — the scope
-   wall applies to names too.
-2. **The plan prose itself** — short sentences, active voice, one instruction
+1. **The ticket's glossary** — build it first, because most naming findings
+   are only visible against it. List every domain concept the plan handles
+   and fix **one word** for each. That word then binds every appearance of
+   the concept: the type, the state field, the action, the prop, the handler,
+   the test name, and the word the spec's acceptance criteria use. Two names
+   for one concept is the most expensive naming defect there is, because it
+   is invisible in any single file — it only appears when a reader crosses
+   the boundary between them, which is exactly what a reviewer does and an
+   author does not.
+
+2. **Identifiers the plan proposes** — new files, components, hooks, props,
+   functions. Judge each against the glossary first, then these four tests:
+
+   - **The comment test.** If the plan needs a sentence to say what a name
+     means, the name is wrong. Rewrite the name and delete the sentence — a
+     type documented as "the source's file name" is called
+     `SourceFileName`, and a box documented as "normalized 0–1, the region
+     to keep" does not get to be called `Box01`.
+   - **One word, one meaning.** No synonym pairs for one act
+     (`fetch`/`load`/`get`), and no word doing two jobs — a `candidate` that
+     means one thing in one file and something unrelated in the next costs
+     more than either bad name alone.
+   - **Specific enough for its only caller.** A name broad enough to belong
+     to the whole codebase (`Fill`, `Box`, `assignments`, `data`) while
+     serving one feature makes every later reader ask which one this is.
+   - **Part of speech follows role.** Functions open with a verb
+     (`findLargestFittingSize`, not `largestFittingSize`); state, props and
+     types are nouns or adjectives.
+
+   Names that already exist in the repo are renamed only if the plan already
+   renames them — the scope wall applies to names too.
+
+3. **The plan prose itself** — short sentences, active voice, one instruction
    per sentence, condition before command. The plan is an instruction
    document; rewrite it like one.
 
@@ -210,8 +236,17 @@ it is an audit finding that belongs back in §1.
 - 2026-08-24 rejected: global store for wizard state — wizard is one subtree, Context is enough
 - naming: MediaDataHandler → useMediaUpload — says what it does, hook naming rule
 - artifact: <url>
+
+### Glossary
+| Concept | The word | Not |
+| --- | --- | --- |
+| the output slot a source is resized into | `target` | cell, slot, dimension |
+| whether the dialog and its session exist | `sessionOpen` | open, dialogOpen |
+| gcd-reduced width:height | `aspectRatio` | ratio, aspect |
 ```
 
 Sprint reads this section at dispatch (the decisions bind every implementer
 subagent) and at integration (each accepted item either survived into the
-code or has a Drift Log entry saying why not).
+code or has a Drift Log entry saying why not). The glossary binds hardest:
+subagents in different waves write different files, so it is the only thing
+stopping one concept from arriving in the diff under two names.
