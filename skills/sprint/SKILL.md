@@ -163,16 +163,34 @@ are judgment calls go to the closeout conversation.
    its own, zero markers, head byte-identical to the pre-rewrite branch.
    Then decide: one PR with that history (usually), or a few complete PRs
    (`split-pr` §3).
-5. **Author the PR description** to `docs/plans/<KEY>/pr-body.md` following
+5. **The demo obligation.** Count the steps from the app's entry point to
+   the feature: launch, then every navigation, upload, or state change a
+   reviewer must perform before the change is on screen. **More than three,
+   or any step needing data the reviewer cannot produce, and `/demo-reel` is
+   mandatory** — not the optional extra its own skill calls it. A reviewer
+   who cannot reach the code judges it from the diff alone, and every defect
+   that only appears on screen ships. Run it and link the clip at the top of
+   the PR body.
+
+   Reachable in three steps or fewer: no demo, and say so at closeout — the
+   reading route in the PR body is enough.
+6. **Author the PR description** to `docs/plans/<KEY>/pr-body.md` following
    split-pr §5: the goal in the user's terms, the reading route, the 2–3
    decisions the reviewer is asked to judge. The gate findings and their
    outcomes go in verbatim as the risk note; the verification claims state
    exactly what ran, nothing more.
-6. **Feed the ledger.** Distill the Drift Log into at most 1–3
+
+   **The reading route lives in the PR body, never in the diff.** Do not
+   open inline threads on your own changes to explain them. An annotation
+   sits where only a reader already in the right file will meet it, it
+   competes with the reviewer's own threads for the same margin, and it goes
+   stale as soon as the line moves. Everything such a note would say belongs
+   in the body, where it is read once, before the diff.
+7. **Feed the ledger.** Distill the Drift Log into at most 1–3
    *generalizable* planning lessons and update `~/.claude/plan-lessons.md`
    by its own protocol (merge before append, ×N counts, 30-entry cap). A
    drift that teaches nothing beyond this ticket adds no entry.
-7. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
+8. If in the cs-jira flow, hand back: `/cs-jira:execute-plan <KEY>` Phase 3
    handles PR creation and the Jira comment — with `pr-body.md` as the PR
    body, not a regenerated one.
 
