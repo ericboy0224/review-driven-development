@@ -15,7 +15,7 @@ watches 30 seconds and knows what was built and why.
 sits behind a flow they cannot reach — a dialog that opens only after an
 upload lands, a state that needs backend data they cannot produce — the clip
 is the only way they see the feature at all, and without it they review the
-diff and miss everything that is only visible on screen. `sprint` §4 makes
+diff and miss everything that is only visible on screen. `sprint` §5 makes
 this call by counting steps from the app's entry point; more than three, or
 any step needing data the reviewer cannot make, and this skill is not
 optional. QA and PM are a bonus audience for the same artifact.
