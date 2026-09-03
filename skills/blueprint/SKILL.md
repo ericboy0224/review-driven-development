@@ -84,6 +84,27 @@ out-of-scope code is discarded, not reported.
   is every piece of state typed (local / remote / shared) and homed
   accordingly, do presentational components stay free of business and
   fetching logic.
+
+  This auditor always asks one more question, because it is the plan-stage
+  version of a defect that costs a structural refactor once the code exists:
+  **is any orchestration planned to live inside a provider, hook or
+  component?** A sequence of awaited effects — request, then wait, then
+  assemble, then classify the failure — planned inside React is a sequence no
+  test can reach wherever the test environment cannot render, and it is
+  usually the part of the feature most worth testing. The finding is to plan
+  it as a plain async function that takes its data and **receives its effects
+  as parameters**, leaving the React layer only what it owns: the state reads,
+  the state writes, and the values those effects need. Check the repo first:
+  where its existing orchestrations that carry tests are plain functions
+  driven from React, a new one planned inside React is the odd one out, and
+  saying so costs one sentence in the plan.
+
+  Two traps when writing that finding. A hook is the wrong wrapper — it buys
+  nothing here, and where hooks cannot be rendered in tests it defeats the
+  purpose. And decide what stays behind by ownership, not by convenience: a
+  value the orchestration cannot obtain on its own (a session id, a budget the
+  UI sets) belongs to the caller, while a constant that only describes the
+  transport belongs with the orchestration.
 - **State shape** — reads §3 of the same reference and asks one question of
   every piece of state the plan introduces: can the proposed type represent a
   combination that must never exist? A `status` (or `phase`, `kind`, `step`)
