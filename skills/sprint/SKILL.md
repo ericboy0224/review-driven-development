@@ -147,10 +147,36 @@ different thing and survives this check: say what it subtracts.
 
 **4. Comment density, measured against the repo.** Compute it, do not judge
 it: comment lines over total lines for the branch's non-test files, against
-the same ratio across the repo. Prose that argues a design decision belongs in
-the PR body or the ticket, where it is read once by the people deciding —
-not carried by every future reader of that file. What stays is what the types
-cannot say.
+the same ratio across the repo. Report both numbers. A branch several times
+the repo's ratio is the finding — no argument about any individual comment is
+needed to raise it, and "my files are the complicated ones" is what every
+author of such a branch believes.
+
+**The default is no comment.** A comment is a confession that the code does not
+say it, so try the code first: a better name, a narrower type, an extracted
+function whose signature carries the fact. Only what none of those can express
+earns a comment — a contract of somebody else's system, an ordering the wire
+imposes, a value whose absence means something. Everything else goes: prose
+that narrates control flow the reader can see, that argues a design decision,
+that defends a review outcome, that describes a future nobody has asked for,
+or that carries a measurement with a date and an environment on it. Those
+belong in the PR body or the ticket, read once by the people deciding, not
+carried by every future reader of the file.
+
+**A design tool's identifiers never belong in source.** A Figma node id, a
+frame name, a board link: the reader cannot follow it from the code, it dies
+the day someone reorganizes the file, and it says nothing about what the code
+does. The design source belongs in the PR or the ticket. A magic number may
+still say what it is — "the design's frame width" — without naming where it
+was read; that sentence survives a redesign, and the node id does not.
+
+**Write what survives in Simplified Technical English.** Load the
+`simple-english` skill and apply it to the comments that stayed: short
+sentences, active voice, one fact per sentence, no metaphor and no flourish. A
+comment is read by a maintainer under time pressure, often not in their first
+language, and a clause that reads well aloud is usually a clause that costs
+them a second pass. The same rules already govern the PR body; a comment is
+held to them too.
 
 The gate's output is applied before the review gate runs, so those reviewers
 spend their attention on defects rather than on volume.
