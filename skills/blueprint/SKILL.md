@@ -196,6 +196,17 @@ Technical English) and apply it to three targets:
    Names that already exist in the repo are renamed only if the plan already
    renames them — the scope wall applies to names too.
 
+   **Naming is what buys comment-free code, which is why it is settled here.**
+   The plan is the last point where a concept can be renamed for a sentence
+   instead of a refactor, so every name that leaves this pass is the one the
+   implementation uses. A plan never prescribes a comment: if it wants to
+   explain a piece of the design, that explanation belongs in the plan and in
+   the PR body, read once, not carried by every future reader of the file.
+   The exceptions are the same three sprint allows — a contract of somebody
+   else's system, an ordering the wire imposes, a value whose absence means
+   something — and those are worth naming in the plan so the implementer knows
+   the short list.
+
 3. **The plan prose itself** — short sentences, active voice, one instruction
    per sentence, condition before command. The plan is an instruction
    document; rewrite it like one.

@@ -76,6 +76,13 @@ they run concurrently. Each subagent gets:
   making the failure unobservable, which is worse than the crash it replaced,
   because the crash was at least reported. When a unit degrades on purpose,
   the reason travels with the degraded value, not in a comment.
+- the **naming-first clause**: comments are not part of the deliverable.
+  Every fact a unit is tempted to write in prose goes into a name, a type or
+  an extracted function first, and the plan's glossary already fixed the words
+  to use. A comment is written only for what none of those can carry — a
+  contract of somebody else's system, an ordering the wire imposes, a value
+  whose absence means something — or when the user asks for one. §3's density
+  gate exists to catch what slips through, not to license writing it.
 
 Each subagent runs the unit's own verify (typecheck scoped to its files,
 its tests) before returning, and reports: files touched, decisions made,
