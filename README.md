@@ -76,6 +76,31 @@ Each skill also works standalone.
 
 ## Field notes
 
+### cold-review, first run (CR-2537, 2026-09-06)
+
+Three lanes, one round each on a ~1800-line, 13-commit rung, all readers on
+the same model. What each lane returned:
+
+- **Today**: zero wrong sentences in two rounds. Ten in-code guesses in round
+  one, six of them closed by one naming commit; four residual in round two.
+  The skeleton commit that "would be curated away at closeout" cost the
+  reader four stumbles on its own — it built a model of a design the branch
+  had already deleted.
+- **Future**: one real defect (a url basename sent back as a file id without
+  decoding; a filename with a space made every dialog save fail — confirmed
+  on staging), one reinvented poll loop beside the helper the dialog already
+  used, and a drift list the owner acted on. The "facts outside the
+  repository" list went straight into the PR body's risk section.
+- **One author**: the dialog files and the run they borrowed from read as one
+  hand; the upload path and the dialog path disagreed at every hand-off on
+  the same wire facts (validate-or-trust the tag builder, one failure
+  taxonomy or three, four outcomes for one empty basename).
+
+What cold-review did not catch, by design: the change's headline acceptance
+criterion did not hold on a real upload, and the reader had called the code
+"deliberate" with good evidence. Deliberate is not right. Correctness stayed
+with the owner and the running app.
+
 The bands this plugin used to enforce (<100 ideal, 400 ceiling) came out of
 two experiments, CR-2530 and CR-2532. Both confirmed that smaller PRs read
 faster individually — and both were rejected by reviewers for the same reason:
