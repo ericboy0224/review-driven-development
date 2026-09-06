@@ -62,11 +62,43 @@ looked different and were the same.
 Name three plausible future changes to this area and, for each, the file and
 function you would go to first. Say how confident you are.
 
+Then read the change once more as if it were three months old and you had
+forgotten this session: which names, shapes or placements would you have to
+re-learn, and which facts the code leans on will have changed by then (a
+design-system marker, a backend response shape, a sibling module's signature)?
+
 ## 6. Reach
 
 Every file outside the diff you had to open to understand the diff, and the
 question that sent you there.
 
+## 7. Pressure on the new interfaces
+
+For every type, function signature, hook, prop or constant the change exports
+or adds to an existing export: name the most likely next change a caller will
+ask of it, and say whether the current shape absorbs that change or breaks its
+callers. Name only changes you can argue from the code and its callers, not
+hypothetical futures. Say what you would have written differently today if
+that next change is real.
+
+## 8. Already exists
+
+For every helper, type, hook or component the change adds, search the
+repository for something that does the same job by CONCEPT, not by name
+(`grep`/`rg` over `src/`; read candidates). Report each candidate with its
+path and one sentence on whether it is the same thing, a near-duplicate that
+differs in one detail, or genuinely different. Report the searches that found
+nothing too, with the terms you used.
+
+## 9. Same thing, different words
+
+List every pair where the change and the existing code (or two places in the
+change) name one concept with two words, or use one word for two concepts.
+For each pair: both names, both locations, which one is older or more widely
+used in the repository (count the call sites), and which one the design
+vocabulary in the code (constants, enums, type names) already prefers.
+
 Rules for the report: one fact per sentence, active voice, no praise, no
-recommendations, no proposals for how to fix anything. You are describing what
-happened when you read, not reviewing.
+proposals for how to fix anything except where §7 explicitly asks what you
+would have written. You are describing what happened when you read, not
+reviewing.
