@@ -35,8 +35,9 @@ branch; failing that, `origin/master`.
 4. Drop local-only scaffolding from the reading set (`DELETE BEFORE MERGE`
    markers, dev seed routes, `docs/`). The reader sees what the reviewer will
    see, nothing more.
-5. Note the size: files, lines, commits. Above ~800 lines, plan for two reading
-   passes (§1 says how).
+5. Note the size: files, lines, commits. Above ~3000 lines, plan for two
+   reading passes (§1 says how). A single reader handled 1800 lines across 12
+   commits without loss (CR-2537, 2026-09-06).
 
 ## 1. The reader — fresh, blind, and never reused
 
@@ -63,7 +64,7 @@ The reader returns six things:
 6. **Reach** — which files outside the diff it had to open to understand the
    diff. Every such file is a hop the reviewer pays.
 
-For a diff above ~800 lines, run two readers in parallel with the same brief
+For a diff above ~3000 lines, run two readers in parallel with the same brief
 and different commit halves, then a third for the whole with both narrations
 withheld. Never let one reader see another's output.
 
