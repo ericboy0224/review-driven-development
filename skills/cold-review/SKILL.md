@@ -39,60 +39,57 @@ branch; failing that, `origin/master`.
    reading passes (§1 says how). A single reader handled 1800 lines across 12
    commits without loss (CR-2537, 2026-09-06).
 
-## 1. The reader — fresh, blind, and never reused
+## 1. The readers — three lanes, fresh, blind, never reused
 
-Spawn **one general-purpose subagent** (never `fork` — a fork inherits this
-conversation, which is the context the reader must not have). Hand it the
-brief in `${CLAUDE_PLUGIN_ROOT}/skills/cold-review/references/reader-brief.md`
-with the placeholders filled: repo path, base ref, the commit list. The brief
-gives it the repository to read around in, because a reviewer can open files
-too. It withholds, by explicit instruction: the ticket, the spec, the plan,
-the PR body, `docs/`, the design doc, and every conversation this session had.
+The reader's job is too wide for one pass: today's understandability, the
+change three months out, and whether it reads as one author's work are three
+different readings of the same diff. Run them as **three general-purpose
+subagents in parallel, in one message, model `opus`** (never `fork` — a fork
+inherits this conversation, which is the context a reader must not have).
+Each gets its own brief from `${CLAUDE_PLUGIN_ROOT}/skills/cold-review/references/`
+with the placeholders filled: repo path, base ref, head commit, the commit
+list. Every brief gives the repository to read around in, because a reviewer
+can open files too, and withholds, by explicit instruction: the ticket, the
+spec, the plan, the PR body, `docs/`, the design doc, and every conversation
+this session had.
 
-The reader returns ten things. The first six measure today's reader; seven
-to nine measure the reader three months from now and the code around it; the
-tenth measures whether the change reads as one author's work:
+| Lane | Brief | Reads | Returns |
+| --- | --- | --- | --- |
+| **Today** | `brief-today.md` | commit by commit, in order | 1 narration (one sentence per commit, one paragraph for the whole) · 2 model (the concepts it learned) · 3 guesses (`file:line`, what it inferred, what would have removed the guess) · 4 stumbles (read twice, unmapped name, effect with no visible owner) · 5 re-entry (three future changes and where it would go; the change read again as three months old) · 6 reach (files outside the diff it had to open) |
+| **Future** | `brief-future.md` | the final state, skimmed whole | 7 pressure (per new export, the next likely change argued from callers, absorb or break) · 8 already exists (the repo searched by concept, misses recorded) · 9 same thing, different words (call-site counts, so the older word is known) |
+| **One author** | `brief-one-author.md` | two or three data paths, end to end | 10 station tables: shapes per datum, re-checks of what an earlier type guaranteed, distrustful hand-offs, vocabulary and validation style along the path, inherited vs introduced |
 
-1. **Narration** — one sentence per commit, then one paragraph for the whole
-   change: what it does and why someone wanted it.
-2. **Model** — the concepts it had to learn, each with the name the code uses
-   and what the reader believes it means.
-3. **Guesses** — every place it inferred intent the code does not state, with
-   `file:line`, the guess, and what it would have needed to see instead.
-4. **Stumbles** — names it could not map to a concept, code it read twice,
-   effects whose owner it could not find, two things that looked the same.
-5. **Re-entry** — three plausible future changes and where it would go to
-   make each. Wrong answers here are the cost the next maintainer pays.
-6. **Reach** — which files outside the diff it had to open to understand the
-   diff. Every such file is a hop the reviewer pays.
-7. **Pressure** — for every new or widened export, the most likely next change
-   a caller will ask of it, and whether the shape absorbs or breaks. Argued
-   from callers, not imagined.
-8. **Already exists** — for every added helper, type, hook or component, the
-   repository searched by concept for what already does the job, with the
-   searches that found nothing recorded too.
-9. **Same thing, different words** — one concept under two names, or one name
-   over two concepts, across the diff and the code it lands in, with call-site
-   counts so the older word is known.
-10. **One author?** — two or three data paths walked end to end: how many
-    shapes one datum wears, which stations re-check what an earlier type
-    already guaranteed, where a receiver distrusts a sender the type already
-    constrained, and whether vocabulary and validation style stay constant.
-    Code written in file-disjoint pieces fails here first: each piece
-    validates the other's output, and the reader holds two models of one
-    datum at once.
+Code written in file-disjoint pieces fails the third lane first: each piece
+validates the other's output, and the reader holds two models of one datum
+at once. Name the data paths in the brief when you know them (the wire
+response that ends up rendered, the user action that ends up written); leave
+the placeholder empty to let the reader choose.
 
-For a diff above ~3000 lines, run two readers in parallel with the same brief
-and different commit halves, then a third for the whole with both narrations
-withheld. Never let one reader see another's output.
+A ticket-specific question — "does this behaviour read as deliberate or as
+an oversight, and from what?" — goes as an extra numbered section at the end
+of the **Today** brief. It asks how the code reads, never whether it is
+right.
+
+When the working tree is being edited by someone else, pin the readers to the
+head commit (`git show <head>:<path>`) and say so in the brief.
+
+Model: `opus` by default. One reader on `opus` covered 1800 lines across 12
+commits without loss; escalate a lane to a stronger model only when its report
+comes back thin, never pre-emptively. Above ~3000 lines, split the **Today**
+lane by commit halves and add a third whole-change reader with both halves
+withheld.
 
 **A reader is single-use.** Once it has narrated, it knows the change. Every
-later round in §3 gets a new one.
+later round in §3 gets three new ones, and no reader ever sees another's
+output.
 
 ## 2. The owner marks the gaps
 
-Compare the narration to the intent, which lives in this context (the spec,
-the plan, the discussion). Mark each sentence and each guess as one of:
+Merge the three reports into one list first — the lanes overlap on purpose
+(a Drift the Future lane counts is often a Stumble the Today lane hit), and
+one gap counted twice is one fix. Then compare the narration to the intent,
+which lives in this context (the spec, the plan, the discussion), and mark
+each sentence and each guess as one of:
 
 | Mark | Meaning | Goes to |
 | --- | --- | --- |
@@ -149,7 +146,7 @@ commit, prefer rewriting that region to the team's shape over patching the
 name: three fixes mean the author's own model was unstable there, and a
 learner's will not be steadier.
 
-Then spawn a **new** reader on the new diff. Stop when:
+Then spawn **three new** readers on the new diff. Stop when:
 
 - the narration matches the intent with no **Wrong** marks, and
 - every remaining guess is **off-code**, and

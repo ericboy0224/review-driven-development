@@ -1,4 +1,4 @@
-# Reader brief — fill the placeholders, hand the whole file to a fresh general-purpose subagent
+# Reader brief — fill the placeholders, hand the whole file to a fresh general-purpose subagent (model: opus)
 
 You are reading a code change the way a colleague on the team would read it
 for the first time. You were not part of any discussion about it. You have no
@@ -72,56 +72,6 @@ design-system marker, a backend response shape, a sibling module's signature)?
 Every file outside the diff you had to open to understand the diff, and the
 question that sent you there.
 
-## 7. Pressure on the new interfaces
-
-For every type, function signature, hook, prop or constant the change exports
-or adds to an existing export: name the most likely next change a caller will
-ask of it, and say whether the current shape absorbs that change or breaks its
-callers. Name only changes you can argue from the code and its callers, not
-hypothetical futures. Say what you would have written differently today if
-that next change is real.
-
-## 8. Already exists
-
-For every helper, type, hook or component the change adds, search the
-repository for something that does the same job by CONCEPT, not by name
-(`grep`/`rg` over `src/`; read candidates). Report each candidate with its
-path and one sentence on whether it is the same thing, a near-duplicate that
-differs in one detail, or genuinely different. Report the searches that found
-nothing too, with the terms you used.
-
-## 9. Same thing, different words
-
-List every pair where the change and the existing code (or two places in the
-change) name one concept with two words, or use one word for two concepts.
-For each pair: both names, both locations, which one is older or more widely
-used in the repository (count the call sites), and which one the design
-vocabulary in the code (constants, enums, type names) already prefers.
-
-## 10. One author?
-
-Pick the two or three pieces of data the change carries furthest (a server
-response that ends up rendered, a user action that ends up written to the
-server). For each, walk the path end to end and write down every station:
-the type or shape the datum has there, the file, and what happens to it
-(parsed, validated, converted, defaulted, narrowed, re-validated, renamed,
-wrapped). Then report:
-
-- how many distinct shapes one datum wears along the path, and which
-  stations only rename or re-wrap;
-- every station that checks something a type from an earlier station already
-  guaranteed (a null check after a non-null type, a `zod` parse after a
-  typed parse, a format after a format);
-- every hand-off where the receiving side distrusts the sending side — a
-  fallback, a default, an `as`, a guard — and whether the sending side's type
-  already forbade that case;
-- whether the stations read as one author's work: the same vocabulary for
-  the same datum, one validation style (all `zod`, or all hand guards, not
-  both), one place where the wire is trusted from then on;
-- the stations where you had to hold two representations of the same datum
-  in mind at once.
-
 Rules for the report: one fact per sentence, active voice, no praise, no
-proposals for how to fix anything except where §7 explicitly asks what you
-would have written. You are describing what happened when you read, not
-reviewing.
+recommendations, no proposals for how to fix anything. You are describing what
+happened when you read, not reviewing.
