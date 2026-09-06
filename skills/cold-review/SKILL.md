@@ -1,6 +1,6 @@
 ---
 name: cold-review
-description: Simulate the reviewer before the reviewer pays — hand the branch diff to a fresh subagent that has no ticket, no spec, no plan, no PR body and no memory, and make it narrate what the change does, commit by commit, listing every place it had to guess — then reads it again as a stranger three months out: which new interface the next likely change breaks, what the repository already had that the diff rebuilt, and where one concept wears two names. The owner compares the narration to the intent; every wrong sentence and every guess is a readability defect, routed to one of three levers (naming, readable architecture, injected side effects) and fixed as a class, then a NEW fresh reader runs again until a stranger's narration matches. Ends with the reading guide for the PR body, written from the narration that finally passed. Use before a PR goes to humans — "/cold-review", "冷讀", "cold read the branch", "會不會看不懂", "reviewer 讀得懂嗎" — after sprint's readability gate, on an existing draft PR, or whenever the user asks whether a diff is understandable without the ticket. Not a defect hunt: correctness stays with the owner.
+description: Simulate the reviewer before the reviewer pays — hand the branch diff to a fresh subagent that has no ticket, no spec, no plan, no PR body and no memory, and make it narrate what the change does, commit by commit, listing every place it had to guess — then reads it again as a stranger three months out: which new interface the next likely change breaks, what the repository already had that the diff rebuilt, where one concept wears two names, and whether a datum keeps one shape from the wire to the screen or is re-validated at every hand-off because the pieces were written apart. The owner compares the narration to the intent; every wrong sentence and every guess is a readability defect, routed to one of three levers (naming, readable architecture, injected side effects) and fixed as a class, then a NEW fresh reader runs again until a stranger's narration matches. Ends with the reading guide for the PR body, written from the narration that finally passed. Use before a PR goes to humans — "/cold-review", "冷讀", "cold read the branch", "會不會看不懂", "reviewer 讀得懂嗎" — after sprint's readability gate, on an existing draft PR, or whenever the user asks whether a diff is understandable without the ticket. Not a defect hunt: correctness stays with the owner.
 ---
 
 # Cold-review — a stranger narrates the diff before a colleague has to
@@ -49,8 +49,9 @@ gives it the repository to read around in, because a reviewer can open files
 too. It withholds, by explicit instruction: the ticket, the spec, the plan,
 the PR body, `docs/`, the design doc, and every conversation this session had.
 
-The reader returns nine things. The first six measure today's reader; the
-last three measure the reader three months from now and the code around it:
+The reader returns ten things. The first six measure today's reader; seven
+to nine measure the reader three months from now and the code around it; the
+tenth measures whether the change reads as one author's work:
 
 1. **Narration** — one sentence per commit, then one paragraph for the whole
    change: what it does and why someone wanted it.
@@ -73,6 +74,13 @@ last three measure the reader three months from now and the code around it:
 9. **Same thing, different words** — one concept under two names, or one name
    over two concepts, across the diff and the code it lands in, with call-site
    counts so the older word is known.
+10. **One author?** — two or three data paths walked end to end: how many
+    shapes one datum wears, which stations re-check what an earlier type
+    already guaranteed, where a receiver distrusts a sender the type already
+    constrained, and whether vocabulary and validation style stay constant.
+    Code written in file-disjoint pieces fails here first: each piece
+    validates the other's output, and the reader holds two models of one
+    datum at once.
 
 For a diff above ~3000 lines, run two readers in parallel with the same brief
 and different commit halves, then a third for the whole with both narrations
@@ -96,6 +104,7 @@ the plan, the discussion). Mark each sentence and each guess as one of:
 | **Brittle** | the reader named a next change, argued from callers, that the shape breaks | §3 as architecture — when the owner agrees the change is real. A future nobody can argue from the code is not paid for today. |
 | **Reinvented** | something in the repository already does the job | §3 as architecture: delete the new one and call the old, or say in the commit body what the old one lacks |
 | **Drift** | one concept, two words; or one word, two concepts | §3 as naming: align to the older or more used word, or to the design doc's term when one exists, never to the newer coinage |
+| **Fragmented** | one datum, several shapes, or a station re-checking what an earlier type guaranteed | §3 as architecture: parse once where the wire enters, trust the type from then on, delete the re-checks and the shapes that only rename. One vocabulary and one validation style along the path. |
 
 Do not explain anything to the reader. Do not answer its questions. Its
 confusion is the deliverable; the answer goes into the code or the PR body.
@@ -109,8 +118,10 @@ Every mark that goes to §3 gets a lever:
   without holding several patterns at once: a concept that exists twice, a
   layer that only moves a line, state placed away from the thing that owns it,
   a component that does two jobs.
-- **Readable architecture** also owns **Brittle** and **Reinvented**: a shape
-  the next real change breaks, and a wheel the repo already had.
+- **Readable architecture** also owns **Brittle**, **Reinvented** and
+  **Fragmented**: a shape the next real change breaks, a wheel the repo
+  already had, and a datum that changes shape at every hand-off because the
+  pieces were written apart.
 - **Naming** also owns **Drift**: the newer word yields to the older one, and
   both yield to the design doc.
 - **Injected side effects** — a complex operation performs its effects inline,

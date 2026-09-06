@@ -188,6 +188,14 @@ held to them too.
 The gate's output is applied before the review gate runs, so those reviewers
 spend their attention on defects rather than on volume.
 
+File-disjoint units have one failure the four checks miss: each implementer
+saw only its own file, so a datum that crosses a unit boundary gets
+re-validated, re-shaped or re-named by the receiver, and the result reads as
+several authors distrusting each other. After the last wave, walk each datum
+that crosses a unit boundary from the wire to the screen and collapse it to
+one shape and one validation site; `cold-review`'s tenth question measures
+what remains.
+
 The four checks above are the author's own judgment of readability. The test
 that counts is a stranger's: after this gate, and again after the re-cut, run
 `cold-review` — a fresh reader with none of this plan narrates the diff, and

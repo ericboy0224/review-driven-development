@@ -98,6 +98,29 @@ For each pair: both names, both locations, which one is older or more widely
 used in the repository (count the call sites), and which one the design
 vocabulary in the code (constants, enums, type names) already prefers.
 
+## 10. One author?
+
+Pick the two or three pieces of data the change carries furthest (a server
+response that ends up rendered, a user action that ends up written to the
+server). For each, walk the path end to end and write down every station:
+the type or shape the datum has there, the file, and what happens to it
+(parsed, validated, converted, defaulted, narrowed, re-validated, renamed,
+wrapped). Then report:
+
+- how many distinct shapes one datum wears along the path, and which
+  stations only rename or re-wrap;
+- every station that checks something a type from an earlier station already
+  guaranteed (a null check after a non-null type, a `zod` parse after a
+  typed parse, a format after a format);
+- every hand-off where the receiving side distrusts the sending side — a
+  fallback, a default, an `as`, a guard — and whether the sending side's type
+  already forbade that case;
+- whether the stations read as one author's work: the same vocabulary for
+  the same datum, one validation style (all `zod`, or all hand guards, not
+  both), one place where the wire is trusted from then on;
+- the stations where you had to hold two representations of the same datum
+  in mind at once.
+
 Rules for the report: one fact per sentence, active voice, no praise, no
 proposals for how to fix anything except where §7 explicitly asks what you
 would have written. You are describing what happened when you read, not
