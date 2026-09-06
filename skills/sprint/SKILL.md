@@ -188,6 +188,12 @@ held to them too.
 The gate's output is applied before the review gate runs, so those reviewers
 spend their attention on defects rather than on volume.
 
+The four checks above are the author's own judgment of readability. The test
+that counts is a stranger's: after this gate, and again after the re-cut, run
+`cold-review` — a fresh reader with none of this plan narrates the diff, and
+every sentence it gets wrong or has to guess is fixed by lever before a human
+pays for it.
+
 ## 4. Review gate — nothing goes to PR without it
 
 Run these reviews against the finished branch, before the history is re-cut,

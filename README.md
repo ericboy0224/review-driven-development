@@ -34,6 +34,7 @@ Line count is a symptom, never a target.
 | `stacked-prs` | The `gh stack` mechanics: create, link, rebase, repair, and merge a chain of PRs. |
 | `pr-deck` | **Optional.** For audiences wider than the reviewers (QA, PM, a demo), a guided-reading deck delivered as Google Slides. Ordinary reviews need only the PR descriptions split-pr writes. |
 | `demo-reel` | One annotated walkthrough GIF instead of a deck: an in-page caption bar labels every scene with the requirement it proves, uploaded to Drive and linked at the top of the PR body. **Mandatory** when a reviewer cannot reach the feature within three steps of the app's entry point — sprint's closeout counts them; optional and lighter than a deck otherwise. |
+| `cold-review` | Simulate the reviewer before the reviewer pays: a fresh subagent with no ticket, spec, plan, PR body or memory narrates the diff commit by commit and lists every place it had to guess. The owner marks each wrong sentence and guess, routes it to one of three levers — naming, readable architecture, injected side effects — fixes the class, and a NEW reader runs until a stranger's narration matches. The narration that passes becomes the PR body's reading guide. Correctness stays with the owner; the reader is a learner, as the human reviewer is. |
 
 ## The flow
 
@@ -50,6 +51,11 @@ spec.md + plan.md          (however you produce them)
         ▼
 re-cut the history         bottom-up, complete commits, placeholders folded
         │                  away, equivalence proved
+        ▼
+/cold-review               a fresh reader with no ticket narrates the diff;
+        │                  wrong sentences and guesses are fixed by lever
+        │                  until a stranger gets it right — its narration
+        │                  becomes the PR body's reading guide
         ▼
 one PR (usually)           curated history, read commit by commit
    or a few complete PRs   only when one is still too much to hold
