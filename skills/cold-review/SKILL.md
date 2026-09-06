@@ -26,12 +26,12 @@ branch; failing that, `origin/master`.
 1. Resolve the base. With a PR: `gh pr view <n> --json baseRefName`. Fetch it.
 2. List the commits the reader will walk, in order:
    `git log --reverse --format='%h %s' origin/<base>..HEAD --no-merges`.
-3. **Stop on a leaked sibling.** A commit whose subject carries another
-   ticket's key, or that only exists because the base branch is behind its own
-   feature branch, is not this change. A learner would build a model of two
-   tickets and blame this one for both. Fix the base (merge the feature branch
-   into the base PR, or move this PR's base) before reading. Report it; do not
-   read around it.
+3. **Read this rung only.** On a stack, the reviewer reads the PR's diff
+   against the rung below it, so the reading set is the commits that carry
+   this ticket's key. Commits from a sibling ticket that show up only because
+   the base rung has not yet pulled its own feature branch are not this
+   change: drop them from the reading set by hash and mention them in the
+   report. They are a base-sync note, not a finding.
 4. Drop local-only scaffolding from the reading set (`DELETE BEFORE MERGE`
    markers, dev seed routes, `docs/`). The reader sees what the reviewer will
    see, nothing more.
