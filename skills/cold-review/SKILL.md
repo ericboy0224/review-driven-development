@@ -31,7 +31,14 @@ branch; failing that, `origin/master`.
    this ticket's key. Commits from a sibling ticket that show up only because
    the base rung has not yet pulled its own feature branch are not this
    change: drop them from the reading set by hash and mention them in the
-   report. They are a base-sync note, not a finding.
+   report. They are a base-sync note, not a finding — but they must be gone
+   before the PR goes to humans. The usual cause: the sibling PR was
+   squash-merged, so the base carries its content as one commit while this
+   branch still carries the originals from when it was stacked on the
+   sibling. A merge cannot remove them; the re-cut has to rebase onto the
+   base rung, where the originals become empty and drop out. Done when
+   `git log <base>..HEAD --no-merges` lists only this ticket's commits and
+   `git log --merges <base>..HEAD` is empty.
 4. Drop local-only scaffolding from the reading set (`DELETE BEFORE MERGE`
    markers, dev seed routes, `docs/`). The reader sees what the reviewer will
    see, nothing more.
